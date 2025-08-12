@@ -1,0 +1,139 @@
+.navbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 4%;
+    height: 68px;
+    background-color: transparent;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 1000;
+}
+
+.navbar-left {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.nav-links {
+    list-style: none;
+    display: flex;
+    gap: 18px;
+    margin: 0;
+    padding: 0;
+}
+
+.nav-links li {
+    color: white;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.nav-links li:hover {
+    text-decoration: underline;
+}
+
+.navbar-right {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+}
+
+.icons {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+}
+
+.profile {
+    width: 32px;
+    height: 32px;
+    border-radius: 4px;
+}
+
+.navbar-profile {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    position: relative;
+    cursor: pointer;
+}
+
+.dropdown {
+    position: absolute;
+    top: 38px;
+    right: 0;
+    background-color: #141414;
+    padding: 8px 14px;
+    border-radius: 3px;
+    display: none;
+}
+
+.dropdown p {
+    font-size: 13px;
+    margin: 0;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.navbar-profile:hover .dropdown {
+    display: block;
+}
+
+.dropdown p:hover {
+    text-decoration: underline;
+}
+
+.nav-dark {
+    background: #141414;
+}
+
+/* ✅ RESPONSIVE STYLING */
+@media (max-width: 1024px) {
+    .nav-links {
+        gap: 12px;
+    }
+
+    .nav-links li {
+        font-size: 13px;
+    }
+}
+
+@media (max-width: 768px) {
+    .nav-links {
+        display: none; /* Hide links for mobile */
+    }
+
+    .navbar {
+        padding: 0 2%;
+    }
+
+    .icons {
+        width: 18px;
+        height: 18px;
+    }
+
+    .profile {
+        width: 28px;
+        height: 28px;
+    }
+}
+
+@media (max-width: 480px) {
+    .navbar {
+        height: 60px;
+        padding: 0 5%;
+    }
+
+    .navbar-left {
+        gap: 10px;
+    }
+
+    .navbar-right {
+        gap: 12px;
+    }
+}
+

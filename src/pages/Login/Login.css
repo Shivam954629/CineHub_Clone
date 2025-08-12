@@ -1,0 +1,190 @@
+.login {
+  height: 100vh;
+  width: 100%;
+  background-image: url('/background_banner.jpg');
+  background-size: cover;
+  background-position: center;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  flex-direction: column;
+  position: relative;
+  padding: 0 20px; /* add padding for small screens */
+}
+
+/* CineHub logo at top-left */
+.cinehub-logo {
+  position: absolute;
+  top: 20px;
+  left: 40px;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 40px;
+  font-weight: bold;
+  color: #e50914;
+  letter-spacing: 2px;
+}
+
+.login-form {
+  background: rgba(0, 0, 0, 0.7);
+  padding: 30px;
+  border-radius: 4px;
+  width: 320px;
+  color: white;
+  margin-top: 120px;
+}
+
+.login-form h2 {
+  font-size: 24px;
+  margin-bottom: 20px;
+}
+
+.login-form input {
+  width: 100%;
+  padding: 12px;
+  margin: 8px 0;
+  border: none;
+  border-radius: 4px;
+  background: #333;
+  color: white;
+}
+
+.login-form button {
+  width: 100%;
+  padding: 12px;
+  margin-top: 10px;
+  background: #e50914;
+  border: none;
+  border-radius: 4px;
+  color: white;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.login-form button:hover {
+  background: #f40612;
+}
+
+.form-help {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 15px;
+  font-size: 13px;
+  color: #bbb;
+  width: 100%;
+}
+
+.remember {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.remember input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: #e50914;
+}
+
+.form-help p {
+  margin: 0;
+  cursor: pointer;
+}
+
+.form-help p:hover {
+  text-decoration: underline;
+}
+
+.form-switch {
+  margin-top: 40px;
+  color: #737373;
+  font-size: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  line-height: 1.4;
+}
+
+.form-switch p {
+  margin: 0;
+  white-space: nowrap;
+}
+
+.form-switch span {
+  margin-left: 4px;
+  color: #fff;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.form-switch span:hover {
+  text-decoration: underline;
+}
+
+.login-spinner {
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.login-spinner img {
+  width: 60px;
+}
+
+/* ---------------- Responsive Design ---------------- */
+
+/* Tablets */
+@media (max-width: 768px) {
+  .cinehub-logo {
+    font-size: 32px;
+    left: 20px;
+    top: 15px;
+  }
+
+  .login-form {
+    width: 280px;
+    margin-top: 100px;
+    padding: 25px;
+  }
+}
+
+/* Mobile phones */
+@media (max-width: 480px) {
+  .cinehub-logo {
+    font-size: 26px;
+    left: 15px;
+    top: 10px;
+  }
+
+  .login-form {
+    width: 100%;
+    max-width: 300px;
+    margin-top: 80px;
+    padding: 20px;
+  }
+
+  .login-form h2 {
+    font-size: 20px;
+  }
+
+  .login-form input,
+  .login-form button {
+    padding: 10px;
+    font-size: 14px;
+  }
+
+  .form-help {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    font-size: 12px;
+  }
+
+  .form-switch {
+    font-size: 12px;
+  }
+}
+
