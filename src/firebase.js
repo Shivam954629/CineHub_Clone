@@ -5,8 +5,7 @@ import {
   signInWithEmailAndPassword,
   signOut,
   GoogleAuthProvider,
-  signInWithRedirect,
-  getRedirectResult,
+  signInWithPopup,
   browserLocalPersistence,
   setPersistence,
 } from "firebase/auth";
@@ -56,11 +55,12 @@ const login = async (email, password) => {
   }
 };
 
-// Google Login
+// Google Login (Popup - works on Vercel)
 const googleLogin = async () => {
   try {
     const provider = new GoogleAuthProvider();
-    await signInWithRedirect(auth, provider);
+    await signInWithPopup(auth, provider);
+    toast.success("Welcome! Logged in with Google 🎉");
   } catch (error) {
     console.error(error);
     toast.error(error.message);
@@ -73,16 +73,4 @@ const logout = () => {
   toast.info("Logged out!");
 };
 
-// Handle Google Redirect Result
-const handleRedirectResult = async () => {
-  try {
-    const result = await getRedirectResult(auth);
-    if (result) {
-      toast.success("Welcome! Logged in with Google 🎉");
-    }
-  } catch (error) {
-    console.error(error);
-  }
-};
-
-export { auth, db, login, signup, logout, googleLogin, handleRedirectResult };
+export { auth, db, login, signup, logout, googleLogin };

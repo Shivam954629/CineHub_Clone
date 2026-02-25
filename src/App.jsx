@@ -6,15 +6,13 @@ import Player from "./pages/Player/Player";
 import MovieDetail from "./pages/MovieDetail/MovieDetail";
 import Watchlist from "./pages/Watchlist/Watchlist";
 import { onAuthStateChanged } from "firebase/auth";
-import { auth, handleRedirectResult } from "./firebase";
+import { auth } from "./firebase";
 import { ToastContainer } from "react-toastify";
 
 const App = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    handleRedirectResult();
-
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
         console.log("Logged In:", user.email);
