@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import "./MovieDetail.css";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import back_arrow_icon from "../../assets/back_arrow_icon.png";
 import { db, auth } from "../../firebase";
 import {
@@ -17,12 +17,19 @@ import { toast } from "react-toastify";
 const MovieDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  
+  const isTV = location.pathname.startsWith("/tv");
+  const mediaType = isTV ? "tv" : "movie";
 
   const [movie, setMovie] = useState(null);
   const [cast, setCast] = useState([]);
+  const [trailer, setTrailer] = useState(null);
   const [loading, setLoading] = useState(true);
   const [inWatchlist, setInWatchlist] = useState(false);
   const [watchlistDocId, setWatchlistDocId] = useState(null);
+  const [showTrailerModal, setShowTrailerModal] = useState(false);
 
   const options = {
     method: "GET",
@@ -36,23 +43,38 @@ const MovieDetail = () => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const [movieRes, creditsRes] = await Promise.all([
+        const [movieRes, creditsRes, videosRes] = await Promise.all([
           fetch(
-            `https://api.themoviedb.org/3/movie/${id}?language=en-US`,
+            `https://api.themoviedb.org/3/${mediaType}/${id}?language=en-US`,
             options,
           ),
           fetch(
-            `https://api.themoviedb.org/3/movie/${id}/credits?language=en-US`,
+            `https://api.themoviedb.org/3/${mediaType}/${id}/credits?language=en-US`,
+            options,
+          ),
+          fetch(
+            `https://api.themoviedb.org/3/${mediaType}/${id}/videos?language=en-US`,
             options,
           ),
         ]);
 
         const movieData = await movieRes.json();
         const creditsData = await creditsRes.json();
+        const videosData = await videosRes.json();
 
         setMovie(movieData);
         setCast(creditsData.cast?.slice(0, 8) || []);
 
+        
+        const trailerVideo =
+          videosData.results?.find(
+            (v) => v.type === "Trailer" && v.site === "YouTube",
+          ) ||
+          videosData.results?.find((v) => v.site === "YouTube") ||
+          null;
+        setTrailer(trailerVideo);
+
+        // Watchlist check
         const user = auth.currentUser;
         if (user) {
           const q = query(
@@ -73,7 +95,7 @@ const MovieDetail = () => {
     };
 
     fetchData();
-  }, [id]);
+  }, [id, mediaType]);
 
   const toggleWatchlist = async () => {
     const user = auth.currentUser;
@@ -88,12 +110,13 @@ const MovieDetail = () => {
         setWatchlistDocId(null);
         toast.info("Removed from Watchlist");
       } else {
+        const title = movie.title || movie.name;
         const docRef = await addDoc(collection(db, "watchlist"), {
           uid: user.uid,
           movieId: parseInt(id),
-          title: movie.title,
+          title,
           poster_path: movie.poster_path,
-          release_date: movie.release_date,
+          release_date: movie.release_date || movie.first_air_date,
           vote_average: movie.vote_average,
           addedAt: new Date(),
         });
@@ -118,19 +141,20 @@ const MovieDetail = () => {
 
   if (!movie) return null;
 
+  const title = movie.title || movie.name;
+  const releaseDate = movie.release_date || movie.first_air_date;
   const backdropUrl = movie.backdrop_path
     ? `https://image.tmdb.org/t/p/original${movie.backdrop_path}`
     : null;
-
   const posterUrl = movie.poster_path
     ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
     : null;
-
-  const hours = Math.floor(movie.runtime / 60);
-  const mins = movie.runtime % 60;
+  const hours = Math.floor((movie.runtime || 0) / 60);
+  const mins = (movie.runtime || 0) % 60;
 
   return (
     <div className="movie-detail">
+      {/* Backdrop */}
       {backdropUrl && (
         <div
           className="detail-backdrop"
@@ -140,6 +164,7 @@ const MovieDetail = () => {
         </div>
       )}
 
+      {/* Back Button */}
       <img
         src={back_arrow_icon}
         alt="back"
@@ -148,14 +173,32 @@ const MovieDetail = () => {
       />
 
       <div className="detail-content">
+        {/* Left — Poster */}
         <div className="detail-left">
           {posterUrl && (
-            <img src={posterUrl} alt={movie.title} className="detail-poster" />
+            <div className="poster-wrap">
+              <img src={posterUrl} alt={title} className="detail-poster" />
+              
+              <div
+                className="poster-play-overlay"
+                onClick={() =>
+                  trailer
+                    ? setShowTrailerModal(true)
+                    : toast.info("No trailer available")
+                }
+              >
+                <div className="poster-play-btn">▶</div>
+              </div>
+            </div>
           )}
+          {/* TV Badge */}
+          {isTV && <div className="media-badge tv-badge">📺 TV Series</div>}
+          {!isTV && <div className="media-badge movie-badge">🎬 Movie</div>}
         </div>
 
+        {/* Right — Info */}
         <div className="detail-right">
-          <h1 className="detail-title">{movie.title}</h1>
+          <h1 className="detail-title">{title}</h1>
           {movie.tagline && <p className="detail-tagline">"{movie.tagline}"</p>}
 
           <div className="detail-meta">
@@ -165,10 +208,16 @@ const MovieDetail = () => {
             <span className="meta-votes">
               ({movie.vote_count?.toLocaleString()} votes)
             </span>
-            <span className="meta-year">{movie.release_date?.slice(0, 4)}</span>
+            <span className="meta-year">{releaseDate?.slice(0, 4)}</span>
             {movie.runtime > 0 && (
               <span className="meta-runtime">
                 {hours}h {mins}m
+              </span>
+            )}
+            {/* TV Show seasons */}
+            {isTV && movie.number_of_seasons && (
+              <span className="meta-runtime">
+                {movie.number_of_seasons} Seasons
               </span>
             )}
           </div>
@@ -183,10 +232,16 @@ const MovieDetail = () => {
 
           <p className="detail-overview">{movie.overview}</p>
 
+          {/* Buttons */}
           <div className="detail-btns">
+            
             <button
               className="play-btn"
-              onClick={() => navigate(`/player/${id}`)}
+              onClick={() =>
+                trailer
+                  ? setShowTrailerModal(true)
+                  : toast.info("No trailer available 😔")
+              }
             >
               ▶ Play Trailer
             </button>
@@ -196,11 +251,12 @@ const MovieDetail = () => {
             >
               {inWatchlist ? "✓ In Watchlist" : "+ Watchlist"}
             </button>
-            <button className="back-btn" onClick={() => navigate("/")}>
-              ← Back to Home
+            <button className="back-btn" onClick={() => navigate(-1)}>
+              ← Go Back
             </button>
           </div>
 
+          {/* Cast */}
           {cast.length > 0 && (
             <div className="detail-cast">
               <h3>Top Cast</h3>
@@ -224,6 +280,35 @@ const MovieDetail = () => {
           )}
         </div>
       </div>
+
+      {/* ✅ Trailer Modal */}
+      {showTrailerModal && trailer && (
+        <div
+          className="trailer-modal"
+          onClick={() => setShowTrailerModal(false)}
+        >
+          <div
+            className="trailer-modal-content"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              className="trailer-close"
+              onClick={() => setShowTrailerModal(false)}
+            >
+              ✕
+            </button>
+            <iframe
+              width="100%"
+              height="100%"
+              src={`https://www.youtube.com/embed/${trailer.key}?autoplay=1`}
+              title="trailer"
+              frameBorder="0"
+              allowFullScreen
+              allow="autoplay; encrypted-media"
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };

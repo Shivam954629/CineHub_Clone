@@ -5,6 +5,10 @@ import Login from "./pages/Login/Login";
 import Player from "./pages/Player/Player";
 import MovieDetail from "./pages/MovieDetail/MovieDetail";
 import Watchlist from "./pages/Watchlist/Watchlist";
+import Movies from "./pages/Movies/Movies";
+import TVShows from "./pages/TVShows/TVShows";
+import NewPopular from "./pages/NewPopular/NewPopular";
+import Settings from "./pages/Settings/Settings";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "./firebase";
 import { ToastContainer } from "react-toastify";
@@ -15,12 +19,8 @@ const App = () => {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
-        console.log("Logged In:", user.email);
-        if (window.location.pathname === "/login") {
-          navigate("/");
-        }
+        if (window.location.pathname === "/login") navigate("/");
       } else {
-        console.log("Logged Out");
         navigate("/login");
       }
     });
@@ -35,7 +35,12 @@ const App = () => {
         <Route path="/login" element={<Login />} />
         <Route path="/player/:id" element={<Player />} />
         <Route path="/movie/:id" element={<MovieDetail />} />
+        <Route path="/tv/:id" element={<MovieDetail />} />
         <Route path="/watchlist" element={<Watchlist />} />
+        <Route path="/movies" element={<Movies />} />
+        <Route path="/tvshows" element={<TVShows />} />
+        <Route path="/new-popular" element={<NewPopular />} />
+        <Route path="/settings" element={<Settings />} />
       </Routes>
     </div>
   );

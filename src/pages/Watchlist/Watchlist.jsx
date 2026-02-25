@@ -9,6 +9,7 @@ import {
   deleteDoc,
   doc,
 } from "firebase/firestore";
+import { onAuthStateChanged } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../../Components/Navbar/Navbar";
 
@@ -18,22 +19,31 @@ const Watchlist = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const user = auth.currentUser;
-    if (!user) return;
+    // ✅ Fix — onAuthStateChanged se user wait karo
+    const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
+      if (!user) {
+        setLoading(false);
+        return;
+      }
 
-    // Real-time listener — Firestore se live data
-    const q = query(collection(db, "watchlist"), where("uid", "==", user.uid));
+      const q = query(
+        collection(db, "watchlist"),
+        where("uid", "==", user.uid),
+      );
 
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const movies = snapshot.docs.map((doc) => ({
-        docId: doc.id,
-        ...doc.data(),
-      }));
-      setWatchlist(movies);
-      setLoading(false);
+      const unsubscribeSnapshot = onSnapshot(q, (snapshot) => {
+        const movies = snapshot.docs.map((doc) => ({
+          docId: doc.id,
+          ...doc.data(),
+        }));
+        setWatchlist(movies);
+        setLoading(false);
+      });
+
+      return () => unsubscribeSnapshot();
     });
 
-    return () => unsubscribe();
+    return () => unsubscribeAuth();
   }, []);
 
   const removeFromWatchlist = async (docId) => {

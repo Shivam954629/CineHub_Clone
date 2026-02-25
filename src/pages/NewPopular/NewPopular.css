@@ -1,0 +1,152 @@
+.np-page {
+  background: #0a0a0a;
+  min-height: 100vh;
+  color: white;
+}
+
+.np-hero {
+  padding: 120px 4% 40px;
+  background: linear-gradient(to bottom, #1a0000, #0a0a0a);
+  text-align: center;
+}
+
+.np-hero h1 {
+  font-size: 48px;
+  font-weight: 900;
+  margin-bottom: 10px;
+}
+
+.np-hero p {
+  color: #aaa;
+  font-size: 16px;
+  margin-bottom: 28px;
+}
+
+.np-tabs {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+}
+
+.np-tab {
+  background: #1a1a1a;
+  color: #ccc;
+  border: 2px solid #333;
+  padding: 12px 32px;
+  border-radius: 30px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.np-tab:hover { border-color: #e50914; color: white; }
+
+.np-tab.active {
+  background: #e50914;
+  border-color: #e50914;
+  color: white;
+}
+
+.np-content { padding: 30px 4% 60px; }
+
+.np-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 24px;
+}
+
+.np-card {
+  cursor: pointer;
+  position: relative;
+  transition: transform 0.3s;
+}
+
+.np-card:hover { transform: scale(1.04); }
+
+.np-rank {
+  font-size: 52px;
+  font-weight: 900;
+  color: #ffffff15;
+  position: absolute;
+  top: -10px;
+  left: -8px;
+  z-index: 1;
+  line-height: 1;
+  font-style: italic;
+  pointer-events: none;
+}
+
+.np-card-img-wrap {
+  position: relative;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.np-card-img-wrap img {
+  width: 100%;
+  aspect-ratio: 2/3;
+  object-fit: cover;
+  display: block;
+}
+
+.np-card-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.25s;
+}
+
+.np-card:hover .np-card-overlay { opacity: 1; }
+
+.np-play-btn {
+  background: #e50914;
+  color: white;
+  border: none;
+  padding: 10px 22px;
+  border-radius: 25px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.np-rating {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: rgba(0,0,0,0.8);
+  color: #f5c518;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 12px;
+}
+
+.np-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #eee;
+  margin: 8px 0 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.np-year { font-size: 12px; color: #777; margin: 0; }
+
+.np-skeleton {
+  border-radius: 8px;
+  aspect-ratio: 2/3;
+  background: linear-gradient(90deg, #1a1a1a 25%, #252525 50%, #1a1a1a 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
