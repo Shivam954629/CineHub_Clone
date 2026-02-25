@@ -9,10 +9,9 @@
   justify-content: flex-start;
   flex-direction: column;
   position: relative;
-  padding: 0 20px; /* add padding for small screens */
+  padding: 0 20px;
 }
 
-/* CineHub logo at top-left */
 .cinehub-logo {
   position: absolute;
   top: 20px;
@@ -22,6 +21,10 @@
   font-weight: bold;
   color: #e50914;
   letter-spacing: 2px;
+}
+
+.cinehub-logo span {
+  color: white;
 }
 
 .login-form {
@@ -64,6 +67,56 @@
   background: #f40612;
 }
 
+/* Divider */
+.divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 8px 0;
+}
+
+.divider::before,
+.divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: #444;
+}
+
+.divider span {
+  color: #888;
+  font-size: 13px;
+}
+
+/* Google Button */
+.google-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px;
+  background: white;
+  color: #333;
+  border: none;
+  border-radius: 4px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+  margin-top: 4px;
+}
+
+.google-btn img {
+  width: 20px;
+  height: 20px;
+}
+
+.google-btn:hover {
+  background: #f1f1f1;
+  transform: scale(1.01);
+}
+
 .form-help {
   display: flex;
   justify-content: space-between;
@@ -87,12 +140,12 @@
   accent-color: #e50914;
 }
 
-.form-help p {
-  margin: 0;
-  cursor: pointer;
+.help-link {
+  color: #bbb;
+  text-decoration: none;
 }
 
-.form-help p:hover {
+.help-link:hover {
   text-decoration: underline;
 }
 
@@ -134,9 +187,8 @@
   width: 60px;
 }
 
-/* ---------------- Responsive Design ---------------- */
+/* ===== RESPONSIVE ===== */
 
-/* Tablets */
 @media (max-width: 768px) {
   .cinehub-logo {
     font-size: 32px;
@@ -151,7 +203,6 @@
   }
 }
 
-/* Mobile phones */
 @media (max-width: 480px) {
   .cinehub-logo {
     font-size: 26px;
@@ -187,4 +238,3 @@
     font-size: 12px;
   }
 }
-

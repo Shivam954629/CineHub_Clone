@@ -4,27 +4,27 @@ import {
   getAuth,
   signInWithEmailAndPassword,
   signOut,
+  GoogleAuthProvider,
+  signInWithRedirect,
+  getRedirectResult,
+  browserLocalPersistence,
+  setPersistence,
 } from "firebase/auth";
-import {
-  addDoc,
-  collection,
-  getFirestore
-} from "firebase/firestore";
+import { addDoc, collection, getFirestore } from "firebase/firestore";
 import { toast } from "react-toastify";
 
-// Firebase config using .env variables
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
   projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
   storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
   messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
 };
 
-// Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
+setPersistence(auth, browserLocalPersistence);
 const db = getFirestore(app);
 
 // Signup
@@ -41,7 +41,7 @@ const signup = async (name, email, password) => {
     toast.success("Signup successful!");
   } catch (error) {
     console.error(error);
-    toast.error(error.code.split('/')[1].split('-').join(" "));
+    toast.error(error.code.split("/")[1].split("-").join(" "));
   }
 };
 
@@ -52,7 +52,18 @@ const login = async (email, password) => {
     toast.success("Login successful!");
   } catch (error) {
     console.error(error);
-    toast.error(error.code.split('/')[1].split('-').join(" "));
+    toast.error(error.code.split("/")[1].split("-").join(" "));
+  }
+};
+
+// Google Login
+const googleLogin = async () => {
+  try {
+    const provider = new GoogleAuthProvider();
+    await signInWithRedirect(auth, provider);
+  } catch (error) {
+    console.error(error);
+    toast.error(error.message);
   }
 };
 
@@ -62,5 +73,16 @@ const logout = () => {
   toast.info("Logged out!");
 };
 
-export { auth, db, login, signup, logout };
+// Handle Google Redirect Result
+const handleRedirectResult = async () => {
+  try {
+    const result = await getRedirectResult(auth);
+    if (result) {
+      toast.success("Welcome! Logged in with Google 🎉");
+    }
+  } catch (error) {
+    console.error(error);
+  }
+};
 
+export { auth, db, login, signup, logout, googleLogin, handleRedirectResult };
