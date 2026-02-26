@@ -231,3 +231,13 @@
   .settings-sidebar { flex-direction: row; flex-wrap: wrap; min-width: unset; }
   .settings-tab { font-size: 12px; padding: 9px 14px; }
 }
+
+.google-account-msg {
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 8px;
+  padding: 20px;
+  color: #aaa;
+  font-size: 14px;
+  line-height: 1.8;
+}

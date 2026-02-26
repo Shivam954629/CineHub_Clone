@@ -6,6 +6,15 @@ import profile_img from "../../assets/profile_img.png";
 import caret_icon from "../../assets/caret_icon.svg";
 import { logout } from "../../firebase";
 import { useNavigate, useLocation } from "react-router-dom";
+import { db, auth } from "../../firebase";
+import {
+  collection,
+  query,
+  where,
+  onSnapshot,
+  orderBy,
+} from "firebase/firestore";
+import { onAuthStateChanged } from "firebase/auth";
 
 const Navbar = () => {
   const navigate = useNavigate();
@@ -19,8 +28,11 @@ const Navbar = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [showBell, setShowBell] = useState(false);
   const searchRef = useRef();
+  const prevWatchlistCount = useRef(
+    parseInt(localStorage.getItem("cinehub_watchlist_count") || "0"),
+  );
 
-  // ✅ activeNav URL se derive hoga — state nahi
+  
   const getActiveNav = () => {
     const path = location.pathname;
     if (path === "/") return "Home";
@@ -32,7 +44,6 @@ const Navbar = () => {
   };
   const activeNav = getActiveNav();
 
-  // ✅ TV Shows page pe TV search, baaki jagah movie search
   const searchType = location.pathname === "/tvshows" ? "tv" : "movie";
 
   useEffect(() => {
@@ -83,23 +94,71 @@ const Navbar = () => {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
-   useEffect(() => {
-     const handleClickOutside = (e) => {
-       if (!e.target.closest(".bell-container")) {
-         setShowBell(false);
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (!e.target.closest(".bell-container")) {
+        setShowBell(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const [notifications, setNotifications] = useState([]);
+
+  useEffect(() => {
+    const saved = localStorage.getItem("cinehub_notifications");
+    if (saved) setNotifications(JSON.parse(saved));
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem(
+      "cinehub_notifications",
+      JSON.stringify(notifications),
+    );
+  }, [notifications]);
+
+
+  
+  useEffect(() => {
+    const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
+      if (!user) return;
+      const q = query(
+        collection(db, "watchlist"),
+        where("uid", "==", user.uid),
+        orderBy("addedAt", "desc"),
+      );
+      const unsubscribeSnapshot = onSnapshot(q, (snapshot) => {
+        const newCount = snapshot.docs.length;
+         localStorage.setItem("cinehub_watchlist_count", newCount);
+       if (newCount > prevWatchlistCount.current) {
+         const latestMovie = snapshot.docs[0]?.data();
+         if (latestMovie) {
+           const newNotif = {
+             id: Date.now(),
+             text: `"${latestMovie.title}" added to watchlist!`,
+             time: "Just now",
+           };
+           setNotifications((prev) => [newNotif, ...prev].slice(0, 10));
+         }
        }
-     };
-     document.addEventListener("mousedown", handleClickOutside);
-     return () => document.removeEventListener("mousedown", handleClickOutside);
-   }, []);
+        prevWatchlistCount.current = newCount;
+      });
+      return () => unsubscribeSnapshot();
+    });
+    return () => unsubscribeAuth();
+  }, []);
 
-  const notifications = [
-    { id: 1, text: "New trending movie added!", time: "2m ago" },
-    { id: 2, text: "Your watchlist has new picks", time: "1h ago" },
-    { id: 3, text: "Top rated movies updated", time: "3h ago" },
-  ];
+  const deleteNotification = (e, id) => {
+    e.stopPropagation();
+    setNotifications((prev) => prev.filter((n) => n.id !== id));
+  };
 
-  // ✅ Search result click — TV ya Movie sahi route pe
+  const clearAll = (e) => {
+    e.stopPropagation();
+    setNotifications([]);
+  };
+
   const handleResultClick = (item) => {
     const isTV = searchType === "tv";
     navigate(isTV ? `/movie/${item.id}` : `/movie/${item.id}`);
@@ -224,21 +283,44 @@ const Navbar = () => {
         </div>
 
         {/* Bell */}
+        {/* Bell */}
         <div className="bell-container" onClick={() => setShowBell(!showBell)}>
           <img src={bell_icon} alt="bell" className="icons" />
-          <span className="bell-badge">3</span>
+          {notifications.length > 0 && (
+            <span className="bell-badge">{notifications.length}</span>
+          )}
           {showBell && (
             <div className="bell-dropdown">
-              <p className="bell-title">Notifications</p>
-              {notifications.map((n) => (
-                <div key={n.id} className="bell-item">
-                  <span className="bell-dot" />
-                  <div>
-                    <p className="bell-text">{n.text}</p>
-                    <p className="bell-time">{n.time}</p>
-                  </div>
+              <div className="bell-header">
+                <p className="bell-title">Notifications</p>
+                {notifications.length > 0 && (
+                  <span className="bell-clear" onClick={clearAll}>
+                    Clear all
+                  </span>
+                )}
+              </div>
+              {notifications.length === 0 ? (
+                <div className="bell-empty">
+                  <p>🔔 No notifications yet</p>
+                  <p>Add a movie to watchlist!</p>
                 </div>
-              ))}
+              ) : (
+                notifications.map((n) => (
+                  <div key={n.id} className="bell-item">
+                    <span className="bell-dot" />
+                    <div className="bell-item-content">
+                      <p className="bell-text">{n.text}</p>
+                      <p className="bell-time">{n.time}</p>
+                    </div>
+                    <button
+                      className="bell-delete"
+                      onClick={(e) => deleteNotification(e, n.id)}
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ))
+              )}
             </div>
           )}
         </div>

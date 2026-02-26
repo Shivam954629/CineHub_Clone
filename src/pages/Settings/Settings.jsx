@@ -5,11 +5,91 @@ import profile_img from "../../assets/profile_img.png";
 import { logout } from "../../firebase";
 import { useNavigate } from "react-router-dom";
 import { auth } from "../../firebase";
+import {
+  updatePassword,
+  reauthenticateWithCredential,
+  EmailAuthProvider,
+} from "firebase/auth";
+import { toast } from "react-toastify";
 
 const Settings = () => {
   const [activeTab, setActiveTab] = useState("profile");
   const navigate = useNavigate();
   const user = auth.currentUser;
+
+  // Profile state
+  const [displayName, setDisplayName] = useState(
+    localStorage.getItem("cinehub_display_name") || "CineHub User",
+  );
+
+  // Password state
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+
+  // Appearance state
+  const [activeTheme, setActiveTheme] = useState(
+    localStorage.getItem("cinehub_theme") || "Dark",
+  );
+
+  // ✅ Save display name
+  const handleSaveProfile = () => {
+    if (!displayName.trim()) {
+      toast.error("Name cannot be empty!");
+      return;
+    }
+    localStorage.setItem("cinehub_display_name", displayName);
+    toast.success("Profile saved! ✅");
+  };
+
+  // ✅ Update password
+  const handleUpdatePassword = async () => {
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      toast.error("Please fill all fields!");
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      toast.error("Passwords don't match!");
+      return;
+    }
+    if (newPassword.length < 6) {
+      toast.error("Password must be at least 6 characters!");
+      return;
+    }
+    try {
+      const credential = EmailAuthProvider.credential(
+        user.email,
+        currentPassword,
+      );
+      await reauthenticateWithCredential(user, credential);
+      await updatePassword(user, newPassword);
+      toast.success("Password updated! ✅");
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+    } catch (err) {
+      if (err.code === "auth/wrong-password") {
+        toast.error("Current password is wrong!");
+      } else {
+        toast.error("Error updating password!");
+      }
+    }
+  };
+
+  // ✅ Theme change
+  const handleThemeChange = (theme) => {
+    setActiveTheme(theme);
+    localStorage.setItem("cinehub_theme", theme);
+    if (theme === "Light") {
+      document.body.style.background = "#f5f5f5";
+      document.body.style.color = "#000";
+      toast.info("Light theme applied ☀️");
+    } else {
+      document.body.style.background = "#000";
+      document.body.style.color = "#fff";
+      toast.info("Dark theme applied 🌙");
+    }
+  };
 
   return (
     <div className="settings-page">
@@ -47,6 +127,7 @@ const Settings = () => {
 
           {/* Content */}
           <div className="settings-body">
+            {/* ✅ Profile Tab */}
             {activeTab === "profile" && (
               <div className="settings-section">
                 <h2>Profile</h2>
@@ -61,42 +142,74 @@ const Settings = () => {
                 <div className="settings-form">
                   <div className="form-group">
                     <label>Display Name</label>
-                    <input type="text" defaultValue="CineHub User" />
+                    <input
+                      type="text"
+                      value={displayName}
+                      onChange={(e) => setDisplayName(e.target.value)}
+                    />
                   </div>
                   <div className="form-group">
                     <label>Email</label>
                     <input
                       type="email"
-                      defaultValue={user?.email || "user@cinehub.com"}
+                      value={user?.email || "user@cinehub.com"}
                       disabled
                     />
                   </div>
-                  <button className="save-btn">Save Changes</button>
+                  <button className="save-btn" onClick={handleSaveProfile}>
+                    Save Changes
+                  </button>
                 </div>
               </div>
             )}
 
+            {/* ✅ Account Tab */}
             {activeTab === "account" && (
               <div className="settings-section">
                 <h2>Account & Security</h2>
-                <div className="settings-form">
-                  <div className="form-group">
-                    <label>Current Password</label>
-                    <input type="password" placeholder="••••••••" />
+                {user?.providerData[0]?.providerId === "google.com" ? (
+                  <div className="google-account-msg">
+                    <p>🔒 You are signed in with Google.</p>
+                    <p>Password change is not available for Google accounts.</p>
                   </div>
-                  <div className="form-group">
-                    <label>New Password</label>
-                    <input type="password" placeholder="••••••••" />
+                ) : (
+                  <div className="settings-form">
+                    <div className="form-group">
+                      <label>Current Password</label>
+                      <input
+                        type="password"
+                        placeholder="••••••••"
+                        value={currentPassword}
+                        onChange={(e) => setCurrentPassword(e.target.value)}
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label>New Password</label>
+                      <input
+                        type="password"
+                        placeholder="••••••••"
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label>Confirm Password</label>
+                      <input
+                        type="password"
+                        placeholder="••••••••"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                      />
+                    </div>
+                    <button className="save-btn" onClick={handleUpdatePassword}>
+                      Update Password
+                    </button>
                   </div>
-                  <div className="form-group">
-                    <label>Confirm Password</label>
-                    <input type="password" placeholder="••••••••" />
-                  </div>
-                  <button className="save-btn">Update Password</button>
-                </div>
+                )}
               </div>
             )}
 
+            {/* Notifications Tab */}
             {activeTab === "notifications" && (
               <div className="settings-section">
                 <h2>Notifications</h2>
@@ -119,6 +232,7 @@ const Settings = () => {
               </div>
             )}
 
+            {/* ✅ Appearance Tab */}
             {activeTab === "appearance" && (
               <div className="settings-section">
                 <h2>Appearance</h2>
@@ -126,9 +240,11 @@ const Settings = () => {
                   {["Dark", "Light", "Auto"].map((theme) => (
                     <button
                       key={theme}
-                      className={`theme-btn ${theme === "Dark" ? "active" : ""}`}
+                      className={`theme-btn ${activeTheme === theme ? "active" : ""}`}
+                      onClick={() => handleThemeChange(theme)}
                     >
-                      {theme === "Dark" && "🌙"} {theme === "Light" && "☀️"}{" "}
+                      {theme === "Dark" && "🌙"}
+                      {theme === "Light" && "☀️"}
                       {theme === "Auto" && "🔄"} {theme}
                     </button>
                   ))}
