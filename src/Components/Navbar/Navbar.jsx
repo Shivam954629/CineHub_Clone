@@ -7,10 +7,18 @@ import caret_icon from "../../assets/caret_icon.svg";
 import { logout } from "../../firebase";
 import { useNavigate, useLocation } from "react-router-dom";
 import { db, auth } from "../../firebase";
-import { collection, query, where, onSnapshot } from "firebase/firestore";
+import {
+  collection,
+  query,
+  where,
+  onSnapshot,
+  addDoc,
+  deleteDoc,
+  doc,
+  getDocs,
+  orderBy,
+} from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
-
-
 
 const Navbar = () => {
   const navigate = useNavigate();
@@ -23,8 +31,10 @@ const Navbar = () => {
   const [navScrolled, setNavScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [showBell, setShowBell] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const [currentUser, setCurrentUser] = useState(null);
   const searchRef = useRef();
-  
+  const prevWatchlistIds = useRef(null); // null = not loaded yet
 
   const getActiveNav = () => {
     const path = location.pathname;
@@ -36,15 +46,16 @@ const Navbar = () => {
     return "";
   };
   const activeNav = getActiveNav();
-
   const searchType = location.pathname === "/tvshows" ? "tv" : "movie";
 
+  // Scroll effect
   useEffect(() => {
     const handleScroll = () => setNavScrolled(window.scrollY > 50);
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  // Search debounce
   useEffect(() => {
     if (searchQuery.trim() === "") {
       setSearchResults([]);
@@ -76,6 +87,7 @@ const Navbar = () => {
     return () => clearTimeout(timer);
   }, [searchQuery, searchType]);
 
+  // Click outside search
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (searchRef.current && !searchRef.current.contains(e.target)) {
@@ -87,6 +99,8 @@ const Navbar = () => {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  // Click outside bell
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (!e.target.closest(".bell-container")) {
@@ -97,50 +111,109 @@ const Navbar = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
- const [notifications, setNotifications] = useState([]);
+  // Auth state
+  useEffect(() => {
+    const unsub = onAuthStateChanged(auth, (user) => {
+      setCurrentUser(user);
+    });
+    return () => unsub();
+  }, []);
 
+  // Load saved notifications from Firestore
+  useEffect(() => {
+    if (!currentUser) return;
 
- useEffect(() => {
-   const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
-     if (!user) return;
-     const q = query(collection(db, "watchlist"), where("uid", "==", user.uid));
-     const unsubscribeSnapshot = onSnapshot(q, (snapshot) => {
-       const currentIds = new Set(snapshot.docs.map((d) => d.id));
+    const q = query(
+      collection(db, "notifications"),
+      where("uid", "==", currentUser.uid),
+      orderBy("createdAt", "desc"),
+    );
 
-       if (window._wIds === undefined) {
-         window._wIds = currentIds;
-         return;
-       }
+    const unsub = onSnapshot(q, (snapshot) => {
+      const notifs = snapshot.docs.map((d) => ({
+        firestoreId: d.id,
+        ...d.data(),
+      }));
+      setNotifications(notifs);
+    });
 
-       const newDocs = snapshot.docs.filter((d) => !window._wIds.has(d.id));
+    return () => unsub();
+  }, [currentUser]);
 
-       newDocs.forEach((d) => {
-         const movie = d.data();
-         if (movie?.title) {
-           const newNotif = {
-             id: Date.now() + Math.random(),
-             text: `"${movie.title}" added to watchlist!`,
-             time: "Just now",
-           };
-           setNotifications((prev) => [newNotif, ...prev].slice(0, 10));
-         }
-       });
+  // Watch watchlist changes — create notification on new add
+  useEffect(() => {
+    if (!currentUser) return;
 
-       window._wIds = currentIds;
-     });
-     return () => unsubscribeSnapshot();
-   });
-   return () => unsubscribeAuth();
- }, []);
+    const q = query(
+      collection(db, "watchlist"),
+      where("uid", "==", currentUser.uid),
+    );
 
-  const deleteNotification = (e, id) => {
+    const unsub = onSnapshot(q, async (snapshot) => {
+      const currentIds = new Set(snapshot.docs.map((d) => d.id));
+
+      // First load — just save IDs, don't notify
+      if (prevWatchlistIds.current === null) {
+        prevWatchlistIds.current = currentIds;
+        return;
+      }
+
+      // Find newly added docs
+      const newDocs = snapshot.docs.filter(
+        (d) => !prevWatchlistIds.current.has(d.id),
+      );
+
+      // Save notification to Firestore for each new movie
+      for (const d of newDocs) {
+        const movie = d.data();
+        if (movie?.title) {
+          try {
+            await addDoc(collection(db, "notifications"), {
+              uid: currentUser.uid,
+              text: `"${movie.title}" added to watchlist! 🎬`,
+              time: "Just now",
+              createdAt: new Date(),
+              read: false,
+            });
+          } catch (err) {
+            console.error("Notification save error:", err);
+          }
+        }
+      }
+
+      prevWatchlistIds.current = currentIds;
+    });
+
+    return () => unsub();
+  }, [currentUser]);
+
+  // Delete single notification
+  const deleteNotification = async (e, firestoreId) => {
     e.stopPropagation();
-    setNotifications((prev) => prev.filter((n) => n.id !== id));
+    try {
+      await deleteDoc(doc(db, "notifications", firestoreId));
+    } catch (err) {
+      console.error(err);
+    }
   };
 
-  const clearAll = (e) => {
+  // Clear all notifications
+  const clearAll = async (e) => {
     e.stopPropagation();
-    setNotifications([]);
+    if (!currentUser) return;
+    try {
+      const q = query(
+        collection(db, "notifications"),
+        where("uid", "==", currentUser.uid),
+      );
+      const snapshot = await getDocs(q);
+      const deletes = snapshot.docs.map((d) =>
+        deleteDoc(doc(db, "notifications", d.id)),
+      );
+      await Promise.all(deletes);
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   const handleResultClick = (item) => {
@@ -153,13 +226,12 @@ const Navbar = () => {
 
   return (
     <div className={`navbar ${navScrolled ? "navbar-scrolled" : ""}`}>
-      {/* ===== LEFT ===== */}
+      {/* LEFT */}
       <div className="navbar-left">
         <div className="logo-text" onClick={() => navigate("/")}>
           CINE<span>HUB</span>
         </div>
 
-        {/* Hamburger */}
         <div
           className={`hamburger ${menuOpen ? "open" : ""}`}
           onClick={() => setMenuOpen(!menuOpen)}
@@ -169,7 +241,6 @@ const Navbar = () => {
           <span></span>
         </div>
 
-        {/* Desktop Nav Links */}
         <ul className="nav-links">
           <li
             className={activeNav === "Home" ? "active" : ""}
@@ -204,7 +275,7 @@ const Navbar = () => {
         </ul>
       </div>
 
-      {/* ===== RIGHT ===== */}
+      {/* RIGHT */}
       <div className="navbar-right">
         {/* Search */}
         <div className="search-container" ref={searchRef}>
@@ -267,7 +338,6 @@ const Navbar = () => {
         </div>
 
         {/* Bell */}
-        {/* Bell */}
         <div className="bell-container" onClick={() => setShowBell(!showBell)}>
           <img src={bell_icon} alt="bell" className="icons" />
           {notifications.length > 0 && (
@@ -290,7 +360,7 @@ const Navbar = () => {
                 </div>
               ) : (
                 notifications.map((n) => (
-                  <div key={n.id} className="bell-item">
+                  <div key={n.firestoreId} className="bell-item">
                     <span className="bell-dot" />
                     <div className="bell-item-content">
                       <p className="bell-text">{n.text}</p>
@@ -298,7 +368,7 @@ const Navbar = () => {
                     </div>
                     <button
                       className="bell-delete"
-                      onClick={(e) => deleteNotification(e, n.id)}
+                      onClick={(e) => deleteNotification(e, n.firestoreId)}
                     >
                       ✕
                     </button>
@@ -310,44 +380,52 @@ const Navbar = () => {
         </div>
 
         {/* Profile */}
-<div className="navbar-profile">
-  <img 
-    src={localStorage.getItem("cinehub_avatar") || profile_img} 
-    alt="profile" 
-    className="profile-img" 
-  />
-  <img src={caret_icon} alt="caret" className="caret-icon" />
-  <div className="dropdown">
-    <div className="dropdown-header">
-      <img 
-        src={localStorage.getItem("cinehub_avatar") || profile_img} 
-        alt="profile" 
-      />
-      <div>
-        <p className="dropdown-name">
-          {localStorage.getItem("cinehub_display_name") || auth.currentUser?.displayName || "My Profile"}
-        </p>
-        <p className="dropdown-email">
-          {auth.currentUser?.email || "CineHub User"}
-        </p>
+        <div className="navbar-profile">
+          <img
+            src={localStorage.getItem("cinehub_avatar") || profile_img}
+            alt="profile"
+            className="profile-img"
+          />
+          <img src={caret_icon} alt="caret" className="caret-icon" />
+          <div className="dropdown">
+            <div className="dropdown-header">
+              <img
+                src={localStorage.getItem("cinehub_avatar") || profile_img}
+                alt="profile"
+              />
+              <div>
+                <p className="dropdown-name">
+                  {localStorage.getItem("cinehub_display_name") ||
+                    auth.currentUser?.displayName ||
+                    "My Profile"}
+                </p>
+                <p className="dropdown-email">
+                  {auth.currentUser?.email || "CineHub User"}
+                </p>
+              </div>
+            </div>
+            <hr className="dropdown-divider" />
+            <p className="dropdown-item" onClick={() => navigate("/watchlist")}>
+              ❤️ My Watchlist
+            </p>
+            <p className="dropdown-item" onClick={() => navigate("/settings")}>
+              ⚙️ Settings
+            </p>
+            <hr className="dropdown-divider" />
+            <p
+              className="dropdown-item signout"
+              onClick={() => {
+                logout();
+                navigate("/login");
+              }}
+            >
+              🚪 Sign Out
+            </p>
+          </div>
+        </div>
       </div>
-    </div>
-    <hr className="dropdown-divider" />
-    <p className="dropdown-item" onClick={() => navigate("/watchlist")}>
-      ❤️ My Watchlist
-    </p>
-    <p className="dropdown-item" onClick={() => navigate("/settings")}>
-      ⚙️ Settings
-    </p>
-    <hr className="dropdown-divider" />
-    <p className="dropdown-item signout" onClick={() => { logout(); navigate("/login"); }}>
-      🚪 Sign Out
-    </p>
-  </div>
-</div>
-</div>
 
-      {/* ===== MOBILE MENU ===== */}
+      {/* MOBILE MENU */}
       {menuOpen && (
         <>
           <div className="menu-overlay" onClick={() => setMenuOpen(false)} />

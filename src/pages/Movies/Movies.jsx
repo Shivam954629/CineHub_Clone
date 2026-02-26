@@ -32,6 +32,7 @@ const Movies = () => {
 
   useEffect(() => {
     setLoading(true);
+    setMovies([]); // pehle clear karo
     const genreParam = activeGenre ? `&with_genres=${activeGenre}` : "";
     const url = bollywood
       ? `https://api.themoviedb.org/3/discover/movie?with_original_language=hi&sort_by=popularity.desc&page=1`
@@ -68,7 +69,7 @@ const Movies = () => {
           <button
             className={`genre-btn ${bollywood ? "active" : ""}`}
             onClick={() => {
-              setBollywood(!bollywood);
+              setBollywood(true);
               setActiveGenre(null);
             }}
           >
@@ -77,8 +78,9 @@ const Movies = () => {
           <button
             className={`genre-btn ${!activeGenre && !bollywood ? "active" : ""}`}
             onClick={() => {
-              setActiveGenre(null);
               setBollywood(false);
+              setActiveGenre(null);
+              setSortBy("popularity.desc");
             }}
           >
             All
@@ -87,7 +89,10 @@ const Movies = () => {
             <button
               key={g.id}
               className={`genre-btn ${activeGenre === g.id ? "active" : ""}`}
-              onClick={() => setActiveGenre(g.id)}
+              onClick={() => {
+                setBollywood(false);
+                setActiveGenre(g.id);
+              }}
             >
               {g.name}
             </button>

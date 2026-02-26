@@ -123,6 +123,18 @@ const MovieDetail = () => {
         setInWatchlist(true);
         setWatchlistDocId(docRef.id);
         toast.success("Added to Watchlist! 🎬");
+        try {
+          const movieTitle = movie.title || movie.name;
+          await addDoc(collection(db, "notifications"), {
+            uid: user.uid,
+            text: `"${movieTitle}" added to watchlist! 🎬`,
+            time: "Just now",
+            createdAt: new Date(),
+            read: false,
+          });
+        } catch (err) {
+          console.error("Notif error:", err);
+        }
       }
     } catch (err) {
       console.error(err);
