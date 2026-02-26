@@ -145,7 +145,7 @@ const Home = () => {
       <div className="more-cards">
         <TitleCards title={"Popular on CineHub"} category={"now_playing"} />
         <TitleCards title={"Blockbuster Movies"} category={"top_rated"} />
-        <TitleCards title={"Hindi Movies 🎬"} category={"hindi"} />
+        <TitleCards title={"Hindi Movies"} category={"hindi"} />
         <TitleCards title={"Only on CineHub"} category={"popular"} />
         <TitleCards title={"Upcoming"} category={"upcoming"} />
         <TitleCards title={"Top Picks for You"} category={"now_playing"} />

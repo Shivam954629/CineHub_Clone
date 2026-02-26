@@ -73,7 +73,7 @@ const Movies = () => {
               setActiveGenre(null);
             }}
           >
-            🎬 Bollywood
+             Bollywood
           </button>
           <button
             className={`genre-btn ${!activeGenre && !bollywood ? "active" : ""}`}
