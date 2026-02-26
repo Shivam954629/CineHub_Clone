@@ -13,13 +13,13 @@ import {
   doc,
 } from "firebase/firestore";
 import { toast } from "react-toastify";
+import Footer from "../../Components/Footer/Footer";
 
 const MovieDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
 
-  
   const isTV = location.pathname.startsWith("/tv");
   const mediaType = isTV ? "tv" : "movie";
 
@@ -30,6 +30,7 @@ const MovieDetail = () => {
   const [inWatchlist, setInWatchlist] = useState(false);
   const [watchlistDocId, setWatchlistDocId] = useState(null);
   const [showTrailerModal, setShowTrailerModal] = useState(false);
+  const [similarMovies, setSimilarMovies] = useState([]);
 
   const options = {
     method: "GET",
@@ -65,7 +66,6 @@ const MovieDetail = () => {
         setMovie(movieData);
         setCast(creditsData.cast?.slice(0, 8) || []);
 
-        
         const trailerVideo =
           videosData.results?.find(
             (v) => v.type === "Trailer" && v.site === "YouTube",
@@ -73,6 +73,15 @@ const MovieDetail = () => {
           videosData.results?.find((v) => v.site === "YouTube") ||
           null;
         setTrailer(trailerVideo);
+
+        const similarRes = await fetch(
+          `https://api.themoviedb.org/3/${mediaType}/${id}/similar?language=en-US&page=1`,
+          options,
+        );
+        const similarData = await similarRes.json();
+        setSimilarMovies(
+          similarData.results?.filter((m) => m.poster_path).slice(0, 12) || [],
+        );
 
         // Watchlist check
         const user = auth.currentUser;
@@ -190,7 +199,7 @@ const MovieDetail = () => {
           {posterUrl && (
             <div className="poster-wrap">
               <img src={posterUrl} alt={title} className="detail-poster" />
-              
+
               <div
                 className="poster-play-overlay"
                 onClick={() =>
@@ -246,7 +255,6 @@ const MovieDetail = () => {
 
           {/* Buttons */}
           <div className="detail-btns">
-            
             <button
               className="play-btn"
               onClick={() =>
@@ -293,6 +301,37 @@ const MovieDetail = () => {
         </div>
       </div>
 
+      {/* Similar Movies */}
+      {similarMovies.length > 0 && (
+        <div className="similar-movies">
+          <h2>You May Also Like</h2>
+          <div className="similar-grid">
+            {similarMovies.map((m) => (
+              <div
+                key={m.id}
+                className="similar-card"
+                onClick={() => navigate(`/${isTV ? "tv" : "movie"}/${m.id}`)}
+              >
+                <div className="similar-img-wrap">
+                  <img
+                    src={`https://image.tmdb.org/t/p/w500${m.poster_path}`}
+                    alt={m.title || m.name}
+                  />
+                  <div className="similar-overlay">▶ Play</div>
+                  <span className="similar-rating">
+                    ⭐ {m.vote_average?.toFixed(1)}
+                  </span>
+                </div>
+                <p className="similar-title">{m.title || m.name}</p>
+                <p className="similar-year">
+                  {(m.release_date || m.first_air_date)?.slice(0, 4)}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* ✅ Trailer Modal */}
       {showTrailerModal && trailer && (
         <div
@@ -321,6 +360,7 @@ const MovieDetail = () => {
           </div>
         </div>
       )}
+      <Footer />
     </div>
   );
 };

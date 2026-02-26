@@ -1,6 +1,7 @@
 import React, { useState, useRef } from "react";
 import "./Settings.css";
 import Navbar from "../../Components/Navbar/Navbar";
+import Footer from "../../Components/Footer/Footer";
 import profile_img from "../../assets/profile_img.png";
 import { logout } from "../../firebase";
 import { useNavigate } from "react-router-dom";
@@ -243,6 +244,7 @@ const Settings = () => {
           </div>
         </div>
       </div>
+      <Footer />
     </div>
   );
 };

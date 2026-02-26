@@ -12,6 +12,7 @@ import {
 import { onAuthStateChanged } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../../Components/Navbar/Navbar";
+import Footer from "../../Components/Footer/Footer";
 
 const Watchlist = () => {
   const [watchlist, setWatchlist] = useState([]);
@@ -100,6 +101,7 @@ const Watchlist = () => {
           </div>
         )}
       </div>
+      <Footer />
     </div>
   );
 };

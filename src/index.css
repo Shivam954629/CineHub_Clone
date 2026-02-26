@@ -10,3 +10,39 @@ body{
   font-family: poppins;
 }
 
+/* Scroll to Top Button */
+.scroll-top-btn {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  width: 44px;
+  height: 44px;
+  background: #e50914;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  font-size: 20px;
+  cursor: pointer;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 20px rgba(229,9,20,0.5);
+  transition: all 0.3s;
+  animation: fadeIn 0.3s ease;
+}
+
+.scroll-top-btn:hover {
+  transform: scale(1.1) translateY(-3px);
+  box-shadow: 0 8px 25px rgba(229,9,20,0.7);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 480px) {
+  .scroll-top-btn { bottom: 20px; right: 20px; width: 38px; height: 38px; font-size: 16px; }
+}
+

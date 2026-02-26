@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import Home from "./pages/Home/Home";
 import { Routes, Route, useNavigate } from "react-router-dom";
 import Login from "./pages/Login/Login";
@@ -15,6 +15,7 @@ import { ToastContainer } from "react-toastify";
 
 const App = () => {
   const navigate = useNavigate();
+  const [showScrollTop, setShowScrollTop] = useState(false);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -26,6 +27,18 @@ const App = () => {
     });
     return () => unsubscribe();
   }, []);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowScrollTop(window.scrollY > 400);
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
 
   return (
     <div>
@@ -42,6 +55,11 @@ const App = () => {
         <Route path="/new-popular" element={<NewPopular />} />
         <Route path="/settings" element={<Settings />} />
       </Routes>
+      {showScrollTop && (
+        <button className="scroll-top-btn" onClick={scrollToTop}>
+          ↑
+        </button>
+      )}
     </div>
   );
 };

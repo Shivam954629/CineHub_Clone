@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import "./TVShows.css";
 import Navbar from "../../Components/Navbar/Navbar";
+import Footer from "../../Components/Footer/Footer";
 import { useNavigate } from "react-router-dom";
 
 const TV_CATEGORIES = [
@@ -94,6 +95,7 @@ const TVShows = () => {
           </div>
         )}
       </div>
+      <Footer />
     </div>
   );
 };

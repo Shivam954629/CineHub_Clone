@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import "./Movies.css";
 import Navbar from "../../Components/Navbar/Navbar";
+import Footer from "../../Components/Footer/Footer";
 import { useNavigate } from "react-router-dom";
 
 const GENRES = [
@@ -20,6 +21,9 @@ const Movies = () => {
   const [activeGenre, setActiveGenre] = useState(null);
   const [sortBy, setSortBy] = useState("popularity.desc");
   const [bollywood, setBollywood] = useState(false);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const navigate = useNavigate();
 
   const options = {
@@ -32,7 +36,9 @@ const Movies = () => {
 
   useEffect(() => {
     setLoading(true);
-    setMovies([]); // pehle clear karo
+    setMovies([]);
+    setPage(1);
+    setHasMore(true);
     const genreParam = activeGenre ? `&with_genres=${activeGenre}` : "";
     const url = bollywood
       ? `https://api.themoviedb.org/3/discover/movie?with_original_language=hi&sort_by=popularity.desc&page=1`
@@ -41,10 +47,32 @@ const Movies = () => {
       .then((r) => r.json())
       .then((r) => {
         setMovies(r.results?.filter((m) => m.poster_path) || []);
+        setHasMore(r.page < r.total_pages);
         setLoading(false);
       })
       .catch(() => setLoading(false));
   }, [activeGenre, sortBy, bollywood]);
+
+  const loadMore = () => {
+    const nextPage = page + 1;
+    setLoadingMore(true);
+    const genreParam = activeGenre ? `&with_genres=${activeGenre}` : "";
+    const url = bollywood
+      ? `https://api.themoviedb.org/3/discover/movie?with_original_language=hi&sort_by=popularity.desc&page=${nextPage}`
+      : `https://api.themoviedb.org/3/discover/movie?sort_by=${sortBy}&page=${nextPage}${genreParam}&language=en-US`;
+    fetch(url, options)
+      .then((r) => r.json())
+      .then((r) => {
+        setMovies((prev) => [
+          ...prev,
+          ...(r.results?.filter((m) => m.poster_path) || []),
+        ]);
+        setPage(nextPage);
+        setHasMore(r.page < r.total_pages);
+        setLoadingMore(false);
+      })
+      .catch(() => setLoadingMore(false));
+  };
 
   return (
     <div className="movies-page">
@@ -73,7 +101,7 @@ const Movies = () => {
               setActiveGenre(null);
             }}
           >
-             Bollywood
+            Bollywood
           </button>
           <button
             className={`genre-btn ${!activeGenre && !bollywood ? "active" : ""}`}
@@ -134,7 +162,21 @@ const Movies = () => {
             ))}
           </div>
         )}
+
+        {/* Load More */}
+        {hasMore && !loading && (
+          <div className="load-more-wrap">
+            <button
+              className="load-more-btn"
+              onClick={loadMore}
+              disabled={loadingMore}
+            >
+              {loadingMore ? "Loading..." : "Load More"}
+            </button>
+          </div>
+        )}
       </div>
+      <Footer />
     </div>
   );
 };

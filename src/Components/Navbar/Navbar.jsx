@@ -7,6 +7,7 @@ import caret_icon from "../../assets/caret_icon.svg";
 import { logout } from "../../firebase";
 import { useNavigate, useLocation } from "react-router-dom";
 import { db, auth } from "../../firebase";
+
 import {
   collection,
   query,
