@@ -9,6 +9,7 @@ import Movies from "./pages/Movies/Movies";
 import TVShows from "./pages/TVShows/TVShows";
 import NewPopular from "./pages/NewPopular/NewPopular";
 import Settings from "./pages/Settings/Settings";
+import NotFound from "./pages/NotFound/NotFound";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "./firebase";
 import { ToastContainer } from "react-toastify";
@@ -54,6 +55,7 @@ const App = () => {
         <Route path="/tvshows" element={<TVShows />} />
         <Route path="/new-popular" element={<NewPopular />} />
         <Route path="/settings" element={<Settings />} />
+        <Route path="*" element={<NotFound />} />
       </Routes>
       {showScrollTop && (
         <button className="scroll-top-btn" onClick={scrollToTop}>

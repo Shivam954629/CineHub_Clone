@@ -1,0 +1,118 @@
+.notfound-page {
+  min-height: 100vh;
+  background: #0a0a0a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  text-align: center;
+  padding: 20px;
+}
+
+.notfound-content {
+  max-width: 500px;
+  animation: fadeUp 0.6s ease;
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.notfound-code {
+  font-size: 150px;
+  font-weight: 900;
+  color: #e50914;
+  line-height: 1;
+  margin: 0;
+  text-shadow: 0 0 80px rgba(229,9,20,0.4);
+  font-family: 'Arial Black', sans-serif;
+}
+
+.notfound-divider {
+  width: 60px;
+  height: 4px;
+  background: #e50914;
+  margin: 20px auto;
+  border-radius: 2px;
+}
+
+.notfound-title {
+  font-size: 28px;
+  font-weight: 700;
+  margin-bottom: 14px;
+  color: #fff;
+}
+
+.notfound-text {
+  color: #888;
+  font-size: 15px;
+  line-height: 1.7;
+  margin-bottom: 36px;
+}
+
+.notfound-btns {
+  display: flex;
+  gap: 14px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.notfound-home-btn {
+  background: #e50914;
+  color: white;
+  border: none;
+  padding: 13px 32px;
+  border-radius: 6px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 4px 20px rgba(229,9,20,0.4);
+}
+
+.notfound-home-btn:hover {
+  background: #f40612;
+  transform: scale(1.05);
+}
+
+.notfound-back-btn {
+  background: transparent;
+  color: white;
+  border: 2px solid #444;
+  padding: 13px 32px;
+  border-radius: 6px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.notfound-back-btn:hover {
+  border-color: #fff;
+  background: rgba(255,255,255,0.05);
+}
+
+/* ===== RESPONSIVE ===== */
+
+@media (max-width: 768px) {
+  .notfound-code { font-size: 120px; }
+  .notfound-title { font-size: 24px; }
+}
+
+@media (max-width: 480px) {
+  .notfound-code { font-size: 90px; }
+  .notfound-title { font-size: 20px; }
+  .notfound-text { font-size: 14px; }
+  .notfound-home-btn,
+  .notfound-back-btn {
+    padding: 11px 24px;
+    font-size: 14px;
+    width: 100%;
+  }
+}
+
+@media (max-width: 360px) {
+  .notfound-code { font-size: 70px; }
+  .notfound-title { font-size: 18px; }
+}
