@@ -4,6 +4,7 @@
   color: white;
 }
 
+/* Hero */
 .np-hero {
   padding: 120px 4% 40px;
   background: linear-gradient(to bottom, #1a0000, #0a0a0a);
@@ -22,10 +23,12 @@
   margin-bottom: 28px;
 }
 
+/* Tabs */
 .np-tabs {
   display: flex;
   justify-content: center;
   gap: 16px;
+  flex-wrap: wrap;
 }
 
 .np-tab {
@@ -40,7 +43,10 @@
   transition: all 0.2s;
 }
 
-.np-tab:hover { border-color: #e50914; color: white; }
+.np-tab:hover {
+  border-color: #e50914;
+  color: white;
+}
 
 .np-tab.active {
   background: #e50914;
@@ -48,22 +54,29 @@
   color: white;
 }
 
-.np-content { padding: 30px 4% 60px; }
+.np-content {
+  padding: 30px 4% 60px;
+}
 
+/* 🔥 GRID (Same as Movies) */
 .np-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-  gap: 24px;
+  gap: 20px;
 }
 
+/* Card */
 .np-card {
   cursor: pointer;
   position: relative;
   transition: transform 0.3s;
 }
 
-.np-card:hover { transform: scale(1.04); }
+.np-card:hover {
+  transform: scale(1.04);
+}
 
+/* Rank */
 .np-rank {
   font-size: 52px;
   font-weight: 900;
@@ -77,6 +90,7 @@
   pointer-events: none;
 }
 
+/* Image */
 .np-card-img-wrap {
   position: relative;
   border-radius: 8px;
@@ -90,6 +104,7 @@
   display: block;
 }
 
+/* Overlay */
 .np-card-overlay {
   position: absolute;
   inset: 0;
@@ -101,7 +116,9 @@
   transition: opacity 0.25s;
 }
 
-.np-card:hover .np-card-overlay { opacity: 1; }
+.np-card:hover .np-card-overlay {
+  opacity: 1;
+}
 
 .np-play-btn {
   background: #e50914;
@@ -114,6 +131,7 @@
   cursor: pointer;
 }
 
+/* Rating */
 .np-rating {
   position: absolute;
   top: 8px;
@@ -126,6 +144,7 @@
   border-radius: 12px;
 }
 
+/* 🔥 TITLE SAME AS MOVIES */
 .np-title {
   font-size: 13px;
   font-weight: 600;
@@ -136,8 +155,13 @@
   text-overflow: ellipsis;
 }
 
-.np-year { font-size: 12px; color: #777; margin: 0; }
+.np-year {
+  font-size: 12px;
+  color: #777;
+  margin: 0;
+}
 
+/* Skeleton */
 .np-skeleton {
   border-radius: 8px;
   aspect-ratio: 2/3;
@@ -151,6 +175,57 @@
   100% { background-position: -200% 0; }
 }
 
+/* Responsive (Same Logic as Movies) */
+
+@media (max-width: 768px) {
+  .np-hero h1 {
+    font-size: 32px;
+  }
+
+  .np-hero p {
+    font-size: 14px;
+  }
+
+  .np-grid {
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: 14px;
+  }
+
+  .np-tab {
+    padding: 10px 22px;
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .np-hero {
+    padding: 100px 4% 30px;
+  }
+
+  .np-hero h1 {
+    font-size: 24px;
+  }
+
+  .np-tabs {
+    gap: 10px;
+  }
+
+  .np-tab {
+    padding: 8px 16px;
+    font-size: 13px;
+  }
+
+  .np-grid {
+    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+    gap: 10px;
+  }
+
+  .np-rank {
+    font-size: 36px;
+  }
+}
+
+/* Load More */
 .load-more-wrap {
   display: flex;
   justify-content: center;
@@ -179,24 +254,4 @@
   opacity: 0.6;
   cursor: not-allowed;
   transform: none;
-}
-
-@media (max-width: 768px) {
-  .np-hero h1 { font-size: 32px; }
-  .np-hero p { font-size: 14px; }
-  .np-grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 16px; }
-  .np-tab { padding: 10px 22px; font-size: 14px; }
-}
-
-@media (max-width: 480px) {
-  .np-hero { padding: 100px 4% 30px; }
-  .np-hero h1 { font-size: 24px; }
-  .np-tabs { gap: 10px; }
-  .np-tab { padding: 8px 16px; font-size: 13px; }
-  .np-grid { grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; }
-  .np-rank { font-size: 36px; }
-}
-
-@media (max-width: 360px) {
-  .np-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
 }

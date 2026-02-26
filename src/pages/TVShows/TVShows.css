@@ -35,7 +35,10 @@
   transition: all 0.2s;
 }
 
-.tv-tab:hover { border-color: #e50914; color: white; }
+.tv-tab:hover {
+  border-color: #e50914;
+  color: white;
+}
 
 .tv-tab.active {
   background: #e50914;
@@ -44,15 +47,22 @@
   font-weight: 600;
 }
 
-/* Grid */
+/* 🔥 GRID (Exactly Like Movies) */
 .tv-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
   gap: 20px;
 }
 
-.tv-card { cursor: pointer; transition: transform 0.3s; }
-.tv-card:hover { transform: scale(1.04); }
+/* Card */
+.tv-card {
+  cursor: pointer;
+  transition: transform 0.3s;
+}
+
+.tv-card:hover {
+  transform: scale(1.04);
+}
 
 .tv-card-img-wrap {
   position: relative;
@@ -78,59 +88,8 @@
   transition: opacity 0.25s;
 }
 
-.tv-card:hover .tv-card-overlay { opacity: 1; }
-
-.tv-card-info-btn {
-  background: rgba(255,255,255,0.2);
-  color: white;
-  border: 2px solid white;
-  padding: 9px 20px;
-  border-radius: 25px;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  backdrop-filter: blur(4px);
-}
-
-.tv-rating {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  background: rgba(0,0,0,0.75);
-  color: #f5c518;
-  font-size: 11px;
-  font-weight: 700;
-  padding: 3px 8px;
-  border-radius: 12px;
-}
-
-.tv-card-title {
-  font-size: 13px;
-  font-weight: 600;
-  color: #eee;
-  margin: 8px 0 3px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.tv-card-year { font-size: 12px; color: #777; margin: 0; }
-
-.tv-card-skeleton {
-  border-radius: 8px;
-  aspect-ratio: 2/3;
-  background: linear-gradient(90deg, #1a1a1a 25%, #252525 50%, #1a1a1a 75%);
-  background-size: 200% 100%;
-  animation: shimmer 1.5s infinite;
-}
-
-@keyframes shimmer {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
-}
-
-@media (max-width: 768px) {
-  .tv-grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); }
+.tv-card:hover .tv-card-overlay {
+  opacity: 1;
 }
 
 .tv-play-btn {
@@ -145,8 +104,60 @@
   transition: transform 0.2s;
 }
 
-.tv-play-btn:hover { transform: scale(1.08); }
+.tv-play-btn:hover {
+  transform: scale(1.08);
+}
 
+.tv-rating {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: rgba(0,0,0,0.75);
+  color: #f5c518;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 12px;
+}
+
+/* 🔥 TITLE EXACT SAME AS MOVIES */
+.tv-card-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #eee;
+  margin: 8px 0 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tv-card-year {
+  font-size: 12px;
+  color: #777;
+  margin: 0;
+}
+
+/* Responsive (Same Logic as Movies) */
+
+@media (max-width: 768px) {
+  .tv-grid {
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: 14px;
+  }
+
+  .tvshows-content h1 {
+    font-size: 24px;
+  }
+}
+
+@media (max-width: 480px) {
+  .tv-grid {
+    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+    gap: 10px;
+  }
+}
+
+/* Load More */
 .load-more-wrap {
   display: flex;
   justify-content: center;
@@ -163,6 +174,7 @@
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s;
+  letter-spacing: 0.5px;
 }
 
 .load-more-btn:hover {
@@ -175,24 +187,4 @@
   opacity: 0.6;
   cursor: not-allowed;
   transform: none;
-}
-
-@media (max-width: 480px) {
-  .tv-grid { 
-    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); 
-    gap: 10px; 
-  }
-  .tvshows-content h1 { font-size: 24px; }
-  .tv-tabs { gap: 6px; }
-  .tv-tab { 
-    padding: 6px 14px; 
-    font-size: 12px; 
-  }
-}
-
-@media (max-width: 360px) {
-  .tv-grid { 
-    grid-template-columns: repeat(2, 1fr); 
-    gap: 8px; 
-  }
 }
