@@ -21,7 +21,7 @@ const App = () => {
       if (user) {
         if (window.location.pathname === "/login") navigate("/");
       } else {
-        navigate("/login");
+        if (window.location.pathname !== "/login") navigate("/login");
       }
     });
     return () => unsubscribe();

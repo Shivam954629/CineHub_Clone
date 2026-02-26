@@ -16,7 +16,7 @@
   position: absolute;
   inset: 0;
   background-size: cover;
-  background-position: center top;
+  background-position: center center;
   background-repeat: no-repeat;
   z-index: 0;
   transition: opacity 0.4s ease;
@@ -249,19 +249,29 @@
 }
 
 @media (max-width: 768px) {
-  .hero         { height: 75vw; min-height: 320px; }
-  .hero-caption { max-width: 85%; bottom: 14%; }
-  .hero-title   { font-size: 24px; }
+  .hero         { height: 100vw; min-height: 320px; }
+  .banner-bg    { background-position: center center; }
+  .hero-caption { max-width: 85%; bottom: 14%; left: 5%; }
+  .hero-title   { font-size: 22px; margin: 6px 0 8px; }
   .hero-overview { display: none; }
   .btn          { padding: 9px 18px; font-size: 13px; }
-  .hero-arrow   { width: 38px; height: 38px; font-size: 22px; }
-  .hero-dots    { bottom: 55px; }
+  .hero-arrow   { width: 36px; height: 36px; font-size: 20px; }
+  .hero-dots    { bottom: 50px; }
+  .hero-bottom-fade { height: 150px; }
 }
 
 @media (max-width: 480px) {
-  .hero         { height: 65vw; min-height: 260px; }
-  .hero-caption { max-width: 90%; bottom: 10%; }
+  .hero         { height: 110vw; min-height: 260px; }
+  .banner-bg    { background-position: center center; }
+  .hero-caption { max-width: 92%; bottom: 12%; left: 4%; }
   .hero-title   { font-size: 18px; }
-  .hero-arrow   { width: 32px; height: 32px; font-size: 18px; }
+  .hero-meta    { gap: 8px; }
+  .hero-arrow   { width: 30px; height: 30px; font-size: 16px; }
   .btn          { padding: 7px 14px; font-size: 12px; }
+  .hero-dots    { bottom: 40px; }
+}
+
+@media (max-width: 360px) {
+  .hero-title   { font-size: 15px; }
+  .btn          { padding: 6px 12px; font-size: 11px; }
 }

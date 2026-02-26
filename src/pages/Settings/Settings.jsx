@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import "./Settings.css";
 import Navbar from "../../Components/Navbar/Navbar";
 import profile_img from "../../assets/profile_img.png";
@@ -16,21 +16,22 @@ const Settings = () => {
   const [activeTab, setActiveTab] = useState("profile");
   const navigate = useNavigate();
   const user = auth.currentUser;
+  const fileInputRef = useRef();
 
   // Profile state
   const [displayName, setDisplayName] = useState(
-    localStorage.getItem("cinehub_display_name") || "CineHub User",
+    localStorage.getItem("cinehub_display_name") ||
+      user?.displayName ||
+      "CineHub User",
+  );
+  const [avatarSrc, setAvatarSrc] = useState(
+    localStorage.getItem("cinehub_avatar") || user?.photoURL || profile_img,
   );
 
   // Password state
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-
-  // Appearance state
-  const [activeTheme, setActiveTheme] = useState(
-    localStorage.getItem("cinehub_theme") || "Dark",
-  );
 
   // ✅ Save display name
   const handleSaveProfile = () => {
@@ -40,6 +41,24 @@ const Settings = () => {
     }
     localStorage.setItem("cinehub_display_name", displayName);
     toast.success("Profile saved! ✅");
+  };
+
+  // ✅ Profile photo change
+  const handlePhotoChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error("Image too large! Max 2MB.");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const base64 = ev.target.result;
+      setAvatarSrc(base64);
+      localStorage.setItem("cinehub_avatar", base64);
+      toast.success("Profile photo updated! ✅");
+    };
+    reader.readAsDataURL(file);
   };
 
   // ✅ Update password
@@ -76,21 +95,6 @@ const Settings = () => {
     }
   };
 
-  // ✅ Theme change
-  const handleThemeChange = (theme) => {
-    setActiveTheme(theme);
-    localStorage.setItem("cinehub_theme", theme);
-    if (theme === "Light") {
-      document.body.style.background = "#f5f5f5";
-      document.body.style.color = "#000";
-      toast.info("Light theme applied ☀️");
-    } else {
-      document.body.style.background = "#000";
-      document.body.style.color = "#fff";
-      toast.info("Dark theme applied 🌙");
-    }
-  };
-
   return (
     <div className="settings-page">
       <Navbar />
@@ -100,20 +104,17 @@ const Settings = () => {
         <div className="settings-layout">
           {/* Sidebar */}
           <div className="settings-sidebar">
-            {["profile", "account", "notifications", "appearance"].map(
-              (tab) => (
-                <button
-                  key={tab}
-                  className={`settings-tab ${activeTab === tab ? "active" : ""}`}
-                  onClick={() => setActiveTab(tab)}
-                >
-                  {tab === "profile" && "👤 Profile"}
-                  {tab === "account" && "🔒 Account"}
-                  {tab === "notifications" && "🔔 Notifications"}
-                  {tab === "appearance" && "🎨 Appearance"}
-                </button>
-              ),
-            )}
+            {["profile", "account", "notifications"].map((tab) => (
+              <button
+                key={tab}
+                className={`settings-tab ${activeTab === tab ? "active" : ""}`}
+                onClick={() => setActiveTab(tab)}
+              >
+                {tab === "profile" && "👤 Profile"}
+                {tab === "account" && "🔒 Account"}
+                {tab === "notifications" && "🔔 Notifications"}
+              </button>
+            ))}
             <button
               className="settings-tab signout-tab"
               onClick={() => {
@@ -133,11 +134,23 @@ const Settings = () => {
                 <h2>Profile</h2>
                 <div className="profile-avatar-section">
                   <img
-                    src={profile_img}
+                    src={avatarSrc}
                     alt="profile"
                     className="settings-avatar"
                   />
-                  <button className="change-avatar-btn">Change Photo</button>
+                  <button
+                    className="change-avatar-btn"
+                    onClick={() => fileInputRef.current.click()}
+                  >
+                    Change Photo
+                  </button>
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    accept="image/*"
+                    style={{ display: "none" }}
+                    onChange={handlePhotoChange}
+                  />
                 </div>
                 <div className="settings-form">
                   <div className="form-group">
@@ -150,11 +163,7 @@ const Settings = () => {
                   </div>
                   <div className="form-group">
                     <label>Email</label>
-                    <input
-                      type="email"
-                      value={user?.email || "user@cinehub.com"}
-                      disabled
-                    />
+                    <input type="email" value={user?.email || ""} disabled />
                   </div>
                   <button className="save-btn" onClick={handleSaveProfile}>
                     Save Changes
@@ -228,34 +237,6 @@ const Settings = () => {
                       </label>
                     </div>
                   ))}
-                </div>
-              </div>
-            )}
-
-            {/* ✅ Appearance Tab */}
-            {activeTab === "appearance" && (
-              <div className="settings-section">
-                <h2>Appearance</h2>
-                <div className="appearance-options">
-                  {["Dark", "Light", "Auto"].map((theme) => (
-                    <button
-                      key={theme}
-                      className={`theme-btn ${activeTheme === theme ? "active" : ""}`}
-                      onClick={() => handleThemeChange(theme)}
-                    >
-                      {theme === "Dark" && "🌙"}
-                      {theme === "Light" && "☀️"}
-                      {theme === "Auto" && "🔄"} {theme}
-                    </button>
-                  ))}
-                </div>
-                <div className="form-group" style={{ marginTop: "24px" }}>
-                  <label>Language</label>
-                  <select className="sort-select">
-                    <option>English</option>
-                    <option>Hindi</option>
-                    <option>Spanish</option>
-                  </select>
                 </div>
               </div>
             )}

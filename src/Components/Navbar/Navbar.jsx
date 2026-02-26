@@ -7,14 +7,10 @@ import caret_icon from "../../assets/caret_icon.svg";
 import { logout } from "../../firebase";
 import { useNavigate, useLocation } from "react-router-dom";
 import { db, auth } from "../../firebase";
-import {
-  collection,
-  query,
-  where,
-  onSnapshot,
-  orderBy,
-} from "firebase/firestore";
+import { collection, query, where, onSnapshot } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
+
+
 
 const Navbar = () => {
   const navigate = useNavigate();
@@ -28,11 +24,8 @@ const Navbar = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [showBell, setShowBell] = useState(false);
   const searchRef = useRef();
-  const prevWatchlistCount = useRef(
-    parseInt(localStorage.getItem("cinehub_watchlist_count") || "0"),
-  );
-
   
+
   const getActiveNav = () => {
     const path = location.pathname;
     if (path === "/") return "Home";
@@ -104,50 +97,41 @@ const Navbar = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const [notifications, setNotifications] = useState([]);
-
-  useEffect(() => {
-    const saved = localStorage.getItem("cinehub_notifications");
-    if (saved) setNotifications(JSON.parse(saved));
-  }, []);
-
-  useEffect(() => {
-    localStorage.setItem(
-      "cinehub_notifications",
-      JSON.stringify(notifications),
-    );
-  }, [notifications]);
+ const [notifications, setNotifications] = useState([]);
 
 
-  
-  useEffect(() => {
-    const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
-      if (!user) return;
-      const q = query(
-        collection(db, "watchlist"),
-        where("uid", "==", user.uid),
-        orderBy("addedAt", "desc"),
-      );
-      const unsubscribeSnapshot = onSnapshot(q, (snapshot) => {
-        const newCount = snapshot.docs.length;
-         localStorage.setItem("cinehub_watchlist_count", newCount);
-       if (newCount > prevWatchlistCount.current) {
-         const latestMovie = snapshot.docs[0]?.data();
-         if (latestMovie) {
+ useEffect(() => {
+   const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
+     if (!user) return;
+     const q = query(collection(db, "watchlist"), where("uid", "==", user.uid));
+     const unsubscribeSnapshot = onSnapshot(q, (snapshot) => {
+       const currentIds = new Set(snapshot.docs.map((d) => d.id));
+
+       if (window._wIds === undefined) {
+         window._wIds = currentIds;
+         return;
+       }
+
+       const newDocs = snapshot.docs.filter((d) => !window._wIds.has(d.id));
+
+       newDocs.forEach((d) => {
+         const movie = d.data();
+         if (movie?.title) {
            const newNotif = {
-             id: Date.now(),
-             text: `"${latestMovie.title}" added to watchlist!`,
+             id: Date.now() + Math.random(),
+             text: `"${movie.title}" added to watchlist!`,
              time: "Just now",
            };
            setNotifications((prev) => [newNotif, ...prev].slice(0, 10));
          }
-       }
-        prevWatchlistCount.current = newCount;
-      });
-      return () => unsubscribeSnapshot();
-    });
-    return () => unsubscribeAuth();
-  }, []);
+       });
+
+       window._wIds = currentIds;
+     });
+     return () => unsubscribeSnapshot();
+   });
+   return () => unsubscribeAuth();
+ }, []);
 
   const deleteNotification = (e, id) => {
     e.stopPropagation();
@@ -161,7 +145,7 @@ const Navbar = () => {
 
   const handleResultClick = (item) => {
     const isTV = searchType === "tv";
-    navigate(isTV ? `/movie/${item.id}` : `/movie/${item.id}`);
+    navigate(isTV ? `/tv/${item.id}` : `/movie/${item.id}`);
     setShowSearch(false);
     setSearchQuery("");
     setSearchResults([]);
@@ -326,37 +310,42 @@ const Navbar = () => {
         </div>
 
         {/* Profile */}
-        <div className="navbar-profile">
-          <img src={profile_img} alt="profile" className="profile-img" />
-          <img src={caret_icon} alt="caret" className="caret-icon" />
-          <div className="dropdown">
-            <div className="dropdown-header">
-              <img src={profile_img} alt="profile" />
-              <div>
-                <p className="dropdown-name">My Profile</p>
-                <p className="dropdown-email">CineHub User</p>
-              </div>
-            </div>
-            <hr className="dropdown-divider" />
-            <p className="dropdown-item" onClick={() => navigate("/watchlist")}>
-              ❤️ My Watchlist
-            </p>
-            <p className="dropdown-item" onClick={() => navigate("/settings")}>
-              ⚙️ Settings
-            </p>
-            <hr className="dropdown-divider" />
-            <p
-              className="dropdown-item signout"
-              onClick={() => {
-                logout();
-                navigate("/login");
-              }}
-            >
-              🚪 Sign Out
-            </p>
-          </div>
-        </div>
+<div className="navbar-profile">
+  <img 
+    src={localStorage.getItem("cinehub_avatar") || profile_img} 
+    alt="profile" 
+    className="profile-img" 
+  />
+  <img src={caret_icon} alt="caret" className="caret-icon" />
+  <div className="dropdown">
+    <div className="dropdown-header">
+      <img 
+        src={localStorage.getItem("cinehub_avatar") || profile_img} 
+        alt="profile" 
+      />
+      <div>
+        <p className="dropdown-name">
+          {localStorage.getItem("cinehub_display_name") || auth.currentUser?.displayName || "My Profile"}
+        </p>
+        <p className="dropdown-email">
+          {auth.currentUser?.email || "CineHub User"}
+        </p>
       </div>
+    </div>
+    <hr className="dropdown-divider" />
+    <p className="dropdown-item" onClick={() => navigate("/watchlist")}>
+      ❤️ My Watchlist
+    </p>
+    <p className="dropdown-item" onClick={() => navigate("/settings")}>
+      ⚙️ Settings
+    </p>
+    <hr className="dropdown-divider" />
+    <p className="dropdown-item signout" onClick={() => { logout(); navigate("/login"); }}>
+      🚪 Sign Out
+    </p>
+  </div>
+</div>
+</div>
 
       {/* ===== MOBILE MENU ===== */}
       {menuOpen && (
