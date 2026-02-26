@@ -8,6 +8,9 @@ const NewPopular = () => {
   const [trending, setTrending] = useState([]);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState("movie");
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const navigate = useNavigate();
 
   const options = {
@@ -20,17 +23,41 @@ const NewPopular = () => {
 
   useEffect(() => {
     setLoading(true);
+    setTrending([]);
+    setPage(1);
+    setHasMore(true);
     fetch(
-      `https://api.themoviedb.org/3/trending/${tab}/week?language=en-US`,
+      `https://api.themoviedb.org/3/trending/${tab}/week?language=en-US&page=1`,
       options,
     )
       .then((r) => r.json())
       .then((r) => {
         setTrending(r.results?.filter((i) => i.poster_path) || []);
+        setHasMore(r.page < r.total_pages);
         setLoading(false);
       })
       .catch(() => setLoading(false));
   }, [tab]);
+
+  const loadMore = () => {
+    const nextPage = page + 1;
+    setLoadingMore(true);
+    fetch(
+      `https://api.themoviedb.org/3/trending/${tab}/week?language=en-US&page=${nextPage}`,
+      options,
+    )
+      .then((r) => r.json())
+      .then((r) => {
+        setTrending((prev) => [
+          ...prev,
+          ...(r.results?.filter((i) => i.poster_path) || []),
+        ]);
+        setPage(nextPage);
+        setHasMore(r.page < r.total_pages);
+        setLoadingMore(false);
+      })
+      .catch(() => setLoadingMore(false));
+  };
 
   return (
     <div className="np-page">
@@ -80,7 +107,6 @@ const NewPopular = () => {
                     src={`https://image.tmdb.org/t/p/w500${item.poster_path}`}
                     alt={item.title || item.name}
                   />
-                  {/* ✅ Dono tabs mein Play button */}
                   <div className="np-card-overlay">
                     <button className="np-play-btn">▶ Play</button>
                   </div>
@@ -94,6 +120,19 @@ const NewPopular = () => {
                 </p>
               </div>
             ))}
+          </div>
+        )}
+
+        {/* Load More */}
+        {hasMore && !loading && (
+          <div className="load-more-wrap">
+            <button
+              className="load-more-btn"
+              onClick={loadMore}
+              disabled={loadingMore}
+            >
+              {loadingMore ? "Loading..." : "Load More"}
+            </button>
           </div>
         )}
       </div>

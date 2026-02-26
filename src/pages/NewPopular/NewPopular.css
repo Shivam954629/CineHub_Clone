@@ -150,3 +150,53 @@
   0% { background-position: 200% 0; }
   100% { background-position: -200% 0; }
 }
+
+.load-more-wrap {
+  display: flex;
+  justify-content: center;
+  margin: 40px 0 20px;
+}
+
+.load-more-btn {
+  background: transparent;
+  color: white;
+  border: 2px solid #e50914;
+  padding: 12px 40px;
+  border-radius: 25px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.load-more-btn:hover {
+  background: #e50914;
+  transform: scale(1.05);
+  box-shadow: 0 6px 20px rgba(229,9,20,0.4);
+}
+
+.load-more-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+@media (max-width: 768px) {
+  .np-hero h1 { font-size: 32px; }
+  .np-hero p { font-size: 14px; }
+  .np-grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 16px; }
+  .np-tab { padding: 10px 22px; font-size: 14px; }
+}
+
+@media (max-width: 480px) {
+  .np-hero { padding: 100px 4% 30px; }
+  .np-hero h1 { font-size: 24px; }
+  .np-tabs { gap: 10px; }
+  .np-tab { padding: 8px 16px; font-size: 13px; }
+  .np-grid { grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; }
+  .np-rank { font-size: 36px; }
+}
+
+@media (max-width: 360px) {
+  .np-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+}

@@ -10,12 +10,16 @@ const TV_CATEGORIES = [
   { label: "Popular", endpoint: "tv/popular" },
   { label: "Airing Today", endpoint: "tv/airing_today" },
   { label: "On The Air", endpoint: "tv/on_the_air" },
+  
 ];
 
 const TVShows = () => {
   const [shows, setShows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeCategory, setActiveCategory] = useState(TV_CATEGORIES[0]);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const navigate = useNavigate();
 
   const options = {
@@ -28,6 +32,9 @@ const TVShows = () => {
 
   useEffect(() => {
     setLoading(true);
+    setShows([]);
+    setPage(1);
+    setHasMore(true);
     fetch(
       `https://api.themoviedb.org/3/${activeCategory.endpoint}?language=en-US&page=1`,
       options,
@@ -35,10 +42,31 @@ const TVShows = () => {
       .then((r) => r.json())
       .then((r) => {
         setShows(r.results?.filter((s) => s.poster_path) || []);
+        setHasMore(r.page < r.total_pages);
         setLoading(false);
       })
       .catch(() => setLoading(false));
   }, [activeCategory]);
+
+  const loadMore = () => {
+    const nextPage = page + 1;
+    setLoadingMore(true);
+    fetch(
+      `https://api.themoviedb.org/3/${activeCategory.endpoint}?language=en-US&page=${nextPage}`,
+      options,
+    )
+      .then((r) => r.json())
+      .then((r) => {
+        setShows((prev) => [
+          ...prev,
+          ...(r.results?.filter((s) => s.poster_path) || []),
+        ]);
+        setPage(nextPage);
+        setHasMore(r.page < r.total_pages);
+        setLoadingMore(false);
+      })
+      .catch(() => setLoadingMore(false));
+  };
 
   return (
     <div className="tvshows-page">
@@ -92,6 +120,19 @@ const TVShows = () => {
                 </p>
               </div>
             ))}
+          </div>
+        )}
+
+        {/* Load More */}
+        {hasMore && !loading && (
+          <div className="load-more-wrap">
+            <button
+              className="load-more-btn"
+              onClick={loadMore}
+              disabled={loadingMore}
+            >
+              {loadingMore ? "Loading..." : "Load More"}
+            </button>
           </div>
         )}
       </div>

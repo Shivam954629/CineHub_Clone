@@ -45,7 +45,7 @@ const TitleCards = ({ title, category }) => {
     return () => {
       cardElement.removeEventListener("wheel", handleWheel);
     };
-  }, []);
+  }, [category]);
 
   return (
     <div className="title-cards">
