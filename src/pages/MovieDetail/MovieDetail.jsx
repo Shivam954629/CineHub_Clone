@@ -224,7 +224,9 @@ const MovieDetail = () => {
 
           <div className="detail-meta">
             <span className="meta-rating">
-              ⭐ {movie.vote_average?.toFixed(1)}/10
+              ⭐{" "}
+              {movie.vote_average > 0 ? movie.vote_average.toFixed(1) : "N/A"}
+              /10
             </span>
             <span className="meta-votes">
               ({movie.vote_count?.toLocaleString()} votes)
@@ -319,7 +321,7 @@ const MovieDetail = () => {
                   />
                   <div className="similar-overlay">▶ Play</div>
                   <span className="similar-rating">
-                    ⭐ {m.vote_average?.toFixed(1)}
+                    ⭐ {m.vote_average > 0 ? m.vote_average.toFixed(1) : "New"}
                   </span>
                 </div>
                 <p className="similar-title">{m.title || m.name}</p>

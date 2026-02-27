@@ -151,7 +151,10 @@ const Movies = () => {
                     <button className="card-play-btn">▶ Play</button>
                   </div>
                   <span className="movie-rating">
-                    ⭐ {movie.vote_average?.toFixed(1)}
+                    ⭐{" "}
+                    {movie.vote_average > 0
+                      ? movie.vote_average.toFixed(1)
+                      : "New"}
                   </span>
                 </div>
                 <p className="movie-card-title">{movie.title}</p>

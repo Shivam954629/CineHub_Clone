@@ -92,7 +92,10 @@ const Home = () => {
           <div className={`hero-caption ${fade ? "fade-in" : "fade-out"}`}>
             <div className="hero-meta">
               <span className="hero-rating">
-                ⭐ {heroMovie.vote_average?.toFixed(1)}
+                ⭐{" "}
+                {heroMovie.vote_average > 0
+                  ? heroMovie.vote_average.toFixed(1)
+                  : "New"}
               </span>
               <span className="hero-year">
                 {heroMovie.release_date?.slice(0, 4)}

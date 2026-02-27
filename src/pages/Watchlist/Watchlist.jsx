@@ -87,7 +87,10 @@ const Watchlist = () => {
                     {movie.release_date?.slice(0, 4)}
                   </p>
                   <p className="watchlist-rating">
-                    ⭐ {movie.vote_average?.toFixed(1)}
+                    ⭐{" "}
+                    {movie.vote_average > 0
+                      ? movie.vote_average.toFixed(1)
+                      : "New"}
                   </p>
                 </div>
                 <button

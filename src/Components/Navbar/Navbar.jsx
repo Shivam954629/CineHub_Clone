@@ -34,6 +34,7 @@ const Navbar = () => {
   const [showBell, setShowBell] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [currentUser, setCurrentUser] = useState(null);
+  const bellRef = useRef();
   const searchRef = useRef();
   const prevWatchlistIds = useRef(null); // null = not loaded yet
 
@@ -104,7 +105,7 @@ const Navbar = () => {
   // Click outside bell
   useEffect(() => {
     const handleClickOutside = (e) => {
-      if (!e.target.closest(".bell-container")) {
+      if (bellRef.current && !bellRef.current.contains(e.target)) {
         setShowBell(false);
       }
     };
@@ -328,7 +329,10 @@ const Navbar = () => {
                           0,
                           4,
                         )}
-                        &nbsp;·&nbsp; ⭐ {item.vote_average?.toFixed(1)}
+                        &nbsp;·&nbsp; ⭐{" "}
+                        {item.vote_average > 0
+                          ? item.vote_average.toFixed(1)
+                          : "New"}
                       </p>
                     </div>
                   </div>
@@ -339,7 +343,7 @@ const Navbar = () => {
         </div>
 
         {/* Bell */}
-        <div className="bell-container" onClick={() => setShowBell(!showBell)}>
+<div className="bell-container" ref={bellRef} onClick={() => setShowBell(!showBell)}>
           <img src={bell_icon} alt="bell" className="icons" />
           {notifications.length > 0 && (
             <span className="bell-badge">{notifications.length}</span>

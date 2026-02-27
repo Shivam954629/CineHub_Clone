@@ -111,7 +111,10 @@ const NewPopular = () => {
                     <button className="np-play-btn">▶ Play</button>
                   </div>
                   <span className="np-rating">
-                    ⭐ {item.vote_average?.toFixed(1)}
+                    ⭐{" "}
+                    {item.vote_average > 0
+                      ? item.vote_average.toFixed(1)
+                      : "New"}
                   </span>
                 </div>
                 <p className="np-title">{item.title || item.name}</p>

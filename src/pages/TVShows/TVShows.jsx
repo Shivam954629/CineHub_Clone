@@ -111,7 +111,10 @@ const TVShows = () => {
                     <button className="tv-play-btn">▶ Play</button>
                   </div>
                   <span className="tv-rating">
-                    ⭐ {show.vote_average?.toFixed(1)}
+                    ⭐{" "}
+                    {show.vote_average > 0
+                      ? show.vote_average.toFixed(1)
+                      : "New"}
                   </span>
                 </div>
                 <p className="tv-card-title">{show.name}</p>
