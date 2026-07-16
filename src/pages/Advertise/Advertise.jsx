@@ -9,7 +9,7 @@ import { toast } from "react-toastify";
 import { BANNER_PLACEMENTS } from "../../config/bannerPlacements";
 import { loadRazorpayScript } from "../../utils/loadRazorpayScript";
 
-const MAX_IMAGE_BYTES = 500 * 1024; // keeps the base64 doc comfortably under Firestore's 1MB/doc limit
+const MAX_IMAGE_BYTES = 700 * 1024; // keeps the base64 doc comfortably under Firestore's 1MB/doc limit
 
 const callApi = async (path, body) => {
   const token = await auth.currentUser.getIdToken();
@@ -60,7 +60,7 @@ const Advertise = () => {
     const file = e.target.files[0];
     if (!file) return;
     if (file.size > MAX_IMAGE_BYTES) {
-      toast.error("Image too large! Max 500KB.");
+      toast.error("Image too large! Max 700KB.");
       return;
     }
     const reader = new FileReader();
@@ -216,7 +216,7 @@ const Advertise = () => {
           </div>
 
           <div className="form-group">
-            <label>Banner image * (max 500KB)</label>
+            <label>Banner image * (max 700KB)</label>
             <label className="image-upload-box">
               {imageBase64 ? (
                 <img src={imageBase64} alt="banner preview" className="image-preview" />
