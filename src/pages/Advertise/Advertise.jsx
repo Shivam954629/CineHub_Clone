@@ -70,7 +70,10 @@ const Advertise = () => {
   }, [user]);
 
   const handleDeleteRequest = async (id) => {
-    if (!window.confirm("Remove this banner? This can't be undone.")) return;
+    const confirmed = window.confirm(
+      "Remove this banner?\n\nThis only takes it down — it does NOT refund the payment you already made. Use this only if the wrong banner went live and you need it off the site immediately; otherwise it'll come down on its own once the paid duration ends.",
+    );
+    if (!confirmed) return;
     try {
       await deleteDoc(doc(db, "adRequests", id));
       toast.success("Banner removed.");
