@@ -27,7 +27,9 @@ const callApi = async (path, body) => {
 const Plans = () => {
   const [user, setUser] = useState(null);
   const [subscription, setSubscription] = useState(null);
+  const [autoPay, setAutoPay] = useState(true);
   const [loadingPlanId, setLoadingPlanId] = useState(null);
+  const [cancelling, setCancelling] = useState(false);
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (u) => setUser(u));
@@ -47,6 +49,94 @@ const Plans = () => {
   const isCurrentPlan = (planId) =>
     subscription?.status === "active" && subscription?.planId === planId;
 
+  const handlePayOnce = async (plan) => {
+    const { orderId, amount, currency, keyId, planName } = await callApi(
+      "/api/razorpay/create-order",
+      { planId: plan.id },
+    );
+
+    const rzp = new window.Razorpay({
+      key: keyId,
+      order_id: orderId,
+      amount,
+      currency,
+      name: "CineHub",
+      description: `${planName} Plan — one-time payment`,
+      theme: { color: "#e50914" },
+      prefill: { email: user.email || "" },
+      handler: async (response) => {
+        try {
+          await callApi("/api/razorpay/verify-payment", {
+            razorpay_order_id: response.razorpay_order_id,
+            razorpay_payment_id: response.razorpay_payment_id,
+            razorpay_signature: response.razorpay_signature,
+          });
+          toast.success(`${planName} activated! 🎉`);
+        } catch (err) {
+          toast.error(err.message || "Verification failed — contact support if you were charged.");
+        } finally {
+          setLoadingPlanId(null);
+        }
+      },
+      modal: {
+        ondismiss: () => {
+          toast.info("Payment cancelled — no charge was made.");
+          setLoadingPlanId(null);
+        },
+      },
+    });
+
+    rzp.on("payment.failed", () => {
+      toast.error("Payment failed — nothing was charged. Please try again.");
+      setLoadingPlanId(null);
+    });
+
+    rzp.open();
+  };
+
+  const handleAutoPay = async (plan) => {
+    const { subscriptionId, keyId, planName } = await callApi(
+      "/api/razorpay/create-subscription",
+      { planId: plan.id },
+    );
+
+    const rzp = new window.Razorpay({
+      key: keyId,
+      subscription_id: subscriptionId,
+      name: "CineHub",
+      description: `${planName} Plan — Auto-Pay (renews monthly)`,
+      theme: { color: "#e50914" },
+      prefill: { email: user.email || "" },
+      handler: async (response) => {
+        try {
+          await callApi("/api/razorpay/verify-subscription", {
+            razorpay_payment_id: response.razorpay_payment_id,
+            razorpay_subscription_id: response.razorpay_subscription_id,
+            razorpay_signature: response.razorpay_signature,
+          });
+          toast.success(`Auto-Pay enabled for ${planName}! 🎉`);
+        } catch (err) {
+          toast.error(err.message || "Verification failed — contact support if you were charged.");
+        } finally {
+          setLoadingPlanId(null);
+        }
+      },
+      modal: {
+        ondismiss: () => {
+          toast.info("Auto-Pay setup cancelled — no mandate was created.");
+          setLoadingPlanId(null);
+        },
+      },
+    });
+
+    rzp.on("payment.failed", () => {
+      toast.error("Authorization failed — nothing was charged. Please try again.");
+      setLoadingPlanId(null);
+    });
+
+    rzp.open();
+  };
+
   const handleSubscribeClick = async (plan) => {
     if (!user) {
       toast.error("Please log in first.");
@@ -59,52 +149,27 @@ const Plans = () => {
 
       // Nothing is saved to CineHub yet — the checkout below opens
       // immediately in this same click. A record only appears once
-      // Razorpay confirms the payment succeeded.
-      const { orderId, amount, currency, keyId, planName } = await callApi(
-        "/api/razorpay/create-order",
-        { planId: plan.id },
-      );
-
-      const rzp = new window.Razorpay({
-        key: keyId,
-        order_id: orderId,
-        amount,
-        currency,
-        name: "CineHub",
-        description: `${planName} Plan`,
-        theme: { color: "#e50914" },
-        prefill: { email: user.email || "" },
-        handler: async (response) => {
-          try {
-            await callApi("/api/razorpay/verify-payment", {
-              razorpay_order_id: response.razorpay_order_id,
-              razorpay_payment_id: response.razorpay_payment_id,
-              razorpay_signature: response.razorpay_signature,
-            });
-            toast.success(`${planName} activated! 🎉`);
-          } catch (err) {
-            toast.error(err.message || "Verification failed — contact support if you were charged.");
-          } finally {
-            setLoadingPlanId(null);
-          }
-        },
-        modal: {
-          ondismiss: () => {
-            toast.info("Payment cancelled — no charge was made.");
-            setLoadingPlanId(null);
-          },
-        },
-      });
-
-      rzp.on("payment.failed", () => {
-        toast.error("Payment failed — nothing was charged. Please try again.");
-        setLoadingPlanId(null);
-      });
-
-      rzp.open();
+      // Razorpay confirms the payment/mandate succeeded.
+      if (autoPay) {
+        await handleAutoPay(plan);
+      } else {
+        await handlePayOnce(plan);
+      }
     } catch (err) {
       toast.error(err.message || "Something went wrong. Please try again.");
       setLoadingPlanId(null);
+    }
+  };
+
+  const handleCancelAutoPay = async () => {
+    setCancelling(true);
+    try {
+      await callApi("/api/razorpay/cancel-subscription", {});
+      toast.success("Auto-Pay cancelled. No further renewals will be charged.");
+    } catch (err) {
+      toast.error(err.message || "Could not cancel Auto-Pay.");
+    } finally {
+      setCancelling(false);
     }
   };
 
@@ -121,18 +186,49 @@ const Plans = () => {
         {subscription?.status === "active" && (
           <div className="current-plan-banner">
             <div>
-              <strong>{subscription.planName}</strong> is your current plan.
+              <strong>{subscription.planName}</strong> is your current plan
+              {subscription.type === "recurring" ? " — Auto-Pay is ON" : " (one-time)"}.
               {subscription.currentPeriodEnd && (
                 <span className="renews-on">
                   {" "}
-                  Valid until{" "}
+                  Renews / valid until{" "}
                   {new Date(subscription.currentPeriodEnd.seconds ? subscription.currentPeriodEnd.seconds * 1000 : subscription.currentPeriodEnd).toLocaleDateString()}
                   .
                 </span>
               )}
             </div>
+            {subscription.type === "recurring" && (
+              <button
+                className="cancel-autopay-btn"
+                onClick={handleCancelAutoPay}
+                disabled={cancelling}
+              >
+                {cancelling ? "Cancelling..." : "Cancel Auto-Pay"}
+              </button>
+            )}
           </div>
         )}
+
+        <div className="autopay-toggle-row">
+          <label className="autopay-toggle">
+            <input
+              type="checkbox"
+              checked={autoPay}
+              onChange={(e) => setAutoPay(e.target.checked)}
+            />
+            <span className="autopay-slider" />
+          </label>
+          <div>
+            <p className="autopay-label">
+              🔁 Auto-Pay {autoPay ? "(recommended)" : ""}
+            </p>
+            <p className="autopay-hint">
+              {autoPay
+                ? "Authorize once (UPI PIN / OTP / card) — renews automatically every month. Cancel anytime from this page."
+                : "Pay once for this month only — you'll need to come back and pay again next month."}
+            </p>
+          </div>
+        </div>
 
         <div className="plans-grid">
           {PLANS.map((plan) => {
@@ -156,7 +252,13 @@ const Plans = () => {
                   disabled={isLoading || active}
                   onClick={() => handleSubscribeClick(plan)}
                 >
-                  {isLoading ? "Processing..." : active ? "Active" : "Subscribe & Pay"}
+                  {isLoading
+                    ? "Processing..."
+                    : active
+                      ? "Active"
+                      : autoPay
+                        ? "Enable Auto-Pay"
+                        : "Subscribe & Pay"}
                 </button>
               </div>
             );
@@ -165,8 +267,8 @@ const Plans = () => {
 
         <p className="rbi-note">
           Note: a full silent deduction without any authorization is not permitted
-          under RBI rules — you'll always authorize the charge via OTP/UPI PIN/card
-          verification.
+          under RBI rules — you'll always authorize the first (and, for Auto-Pay,
+          every mandate-linked) charge via OTP/UPI PIN/card verification.
         </p>
       </div>
       <Footer />

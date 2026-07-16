@@ -1,6 +1,10 @@
 import crypto from "crypto";
 import { getRazorpayInstance } from "../_lib/razorpay.js";
-import { activateSubscription } from "../_lib/subscriptions.js";
+import {
+  activateSubscription,
+  activateRecurringSubscription,
+  markSubscriptionStatus,
+} from "../_lib/subscriptions.js";
 import { activateAdRequest } from "../_lib/adRequests.js";
 
 // Raw body is required to verify Razorpay's HMAC signature — must disable
@@ -50,31 +54,67 @@ export default async function handler(req, res) {
   }
 
   try {
-    if (event.event === "payment.captured") {
-      const payment = event.payload.payment.entity;
-      const razorpay = getRazorpayInstance();
-      const order = await razorpay.orders.fetch(payment.order_id);
-      const notes = order.notes || {};
+    switch (event.event) {
+      case "payment.captured": {
+        const payment = event.payload.payment.entity;
+        // Recurring charges are handled by subscription.charged below.
+        if (!payment.subscription_id) {
+          const razorpay = getRazorpayInstance();
+          const order = await razorpay.orders.fetch(payment.order_id);
+          const notes = order.notes || {};
 
-      if (notes.kind === "banner_ad" && notes.uid && notes.placementId) {
-        // Fallback path only (browser closed before verify-ad-payment could
-        // send title/description/image) — activateAdRequest merges, so if
-        // verify-ad-payment does still land afterwards it fills these
-        // fields in without creating a duplicate.
-        await activateAdRequest({
-          orderId: payment.order_id,
-          paymentId: payment.id,
-          uid: notes.uid,
-          placementId: notes.placementId,
-        });
-      } else if (notes.uid && notes.planId) {
-        await activateSubscription({
-          orderId: payment.order_id,
-          paymentId: payment.id,
-          uid: notes.uid,
-          planId: notes.planId,
-        });
+          if (notes.kind === "banner_ad" && notes.uid && notes.placementId) {
+            // Fallback path only (browser closed before verify-ad-payment
+            // could send title/description/image) — activateAdRequest
+            // merges, so if verify-ad-payment does still land afterwards
+            // it fills these fields in without creating a duplicate.
+            await activateAdRequest({
+              orderId: payment.order_id,
+              paymentId: payment.id,
+              uid: notes.uid,
+              placementId: notes.placementId,
+            });
+          } else if (notes.uid && notes.planId) {
+            await activateSubscription({
+              orderId: payment.order_id,
+              paymentId: payment.id,
+              uid: notes.uid,
+              planId: notes.planId,
+            });
+          }
+        }
+        break;
       }
+
+      case "subscription.activated":
+      case "subscription.charged": {
+        const sub = event.payload.subscription.entity;
+        const { uid, planId } = sub.notes || {};
+        if (uid && planId) {
+          await activateRecurringSubscription({
+            subscriptionId: sub.id,
+            uid,
+            planId,
+            currentEnd: new Date(sub.current_end * 1000),
+          });
+        }
+        break;
+      }
+
+      case "subscription.cancelled":
+      case "subscription.halted":
+      case "subscription.completed": {
+        const sub = event.payload.subscription.entity;
+        const { uid } = sub.notes || {};
+        const status = event.event.split(".")[1];
+        if (uid) {
+          await markSubscriptionStatus({ subscriptionId: sub.id, uid, status });
+        }
+        break;
+      }
+
+      default:
+        break;
     }
 
     return res.status(200).json({ received: true });
