@@ -459,6 +459,15 @@ const Navbar = () => {
               >
                 💳 Plans & Billing
               </p>
+              <p
+                className="dropdown-item"
+                onClick={() => {
+                  setShowProfileMenu(false);
+                  navigate("/advertise");
+                }}
+              >
+                📢 Advertise with Us
+              </p>
               <hr className="dropdown-divider" />
               <p
                 className="dropdown-item signout"
@@ -527,6 +536,14 @@ const Navbar = () => {
               }}
             >
               💳 Plans & Billing
+            </li>
+            <li
+              onClick={() => {
+                navigate("/advertise");
+                setMenuOpen(false);
+              }}
+            >
+              📢 Advertise with Us
             </li>
             <li
               onClick={() => {

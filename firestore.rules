@@ -40,3 +40,12 @@ match /razorpayPlans/{planId} {
   // Internal cache of Razorpay plan ids — backend only.
   allow read, write: if false;
 }
+
+match /adRequests/{orderId} {
+  // Same guarantee as /subscriptions: a banner ad request only ever
+  // appears here once the backend has verified a real Razorpay payment.
+  // No client write, ever — otherwise anyone could submit a "paid" banner
+  // request from the browser console without paying.
+  allow read: if request.auth != null && request.auth.uid == resource.data.uid;
+  allow write: if false;
+}

@@ -10,6 +10,7 @@ import TVShows from "./pages/TVShows/TVShows";
 import NewPopular from "./pages/NewPopular/NewPopular";
 import Settings from "./pages/Settings/Settings";
 import Plans from "./pages/Plans/Plans";
+import Advertise from "./pages/Advertise/Advertise";
 import NotFound from "./pages/NotFound/NotFound";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "./firebase";
@@ -66,6 +67,7 @@ const App = () => {
         <Route path="/new-popular" element={<NewPopular />} />
         <Route path="/settings" element={<Settings />} />
         <Route path="/plans" element={<Plans />} />
+        <Route path="/advertise" element={<Advertise />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
       {showScrollTop && (

@@ -26,7 +26,7 @@ export default async function handler(req, res) {
       amount: plan.priceInPaise,
       currency: "INR",
       receipt: `sub_${uid}_${Date.now()}`,
-      notes: { uid, planId: plan.id },
+      notes: { kind: "plan", uid, planId: plan.id },
     });
 
     return res.status(200).json({

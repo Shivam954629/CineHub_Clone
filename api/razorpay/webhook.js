@@ -5,6 +5,7 @@ import {
   activateRecurringSubscription,
   markSubscriptionStatus,
 } from "../_lib/subscriptions.js";
+import { activateAdRequest } from "../_lib/adRequests.js";
 
 // Raw body is required to verify Razorpay's HMAC signature — must disable
 // Vercel's automatic JSON body parsing for this route.
@@ -60,13 +61,25 @@ export default async function handler(req, res) {
         if (!payment.subscription_id) {
           const razorpay = getRazorpayInstance();
           const order = await razorpay.orders.fetch(payment.order_id);
-          const { uid, planId } = order.notes || {};
-          if (uid && planId) {
+          const notes = order.notes || {};
+
+          if (notes.kind === "banner_ad" && notes.uid && notes.placementId) {
+            await activateAdRequest({
+              orderId: payment.order_id,
+              paymentId: payment.id,
+              uid: notes.uid,
+              placementId: notes.placementId,
+              title: notes.title,
+              description: notes.description,
+              clickUrl: notes.clickUrl,
+              imageUrl: notes.imageUrl,
+            });
+          } else if (notes.uid && notes.planId) {
             await activateSubscription({
               orderId: payment.order_id,
               paymentId: payment.id,
-              uid,
-              planId,
+              uid: notes.uid,
+              planId: notes.planId,
             });
           }
         }
