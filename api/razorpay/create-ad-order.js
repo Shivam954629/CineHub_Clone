@@ -32,7 +32,8 @@ export default async function handler(req, res) {
     const order = await razorpay.orders.create({
       amount: placement.priceInPaise,
       currency: "INR",
-      receipt: `ad_${uid}_${Date.now()}`,
+      // Razorpay caps receipt at 40 chars — Firebase uids alone are 28.
+      receipt: `ad_${uid.slice(0, 12)}_${Date.now().toString(36)}`,
       notes: { kind: "banner_ad", uid, placementId: placement.id },
     });
 
