@@ -10,7 +10,6 @@ import {
   setPersistence,
 } from "firebase/auth";
 import { addDoc, collection, getFirestore } from "firebase/firestore";
-import { getStorage } from "firebase/storage";
 import { toast } from "react-toastify";
 
 const firebaseConfig = {
@@ -26,7 +25,6 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 setPersistence(auth, browserLocalPersistence);
 const db = getFirestore(app);
-const storage = getStorage(app);
 
 const signup = async (name, email, password) => {
   try {
@@ -73,4 +71,4 @@ const logout = () => {
   toast.info("Logged out!");
 };
 
-export { auth, db, storage, login, signup, logout, googleLogin };
+export { auth, db, login, signup, logout, googleLogin };

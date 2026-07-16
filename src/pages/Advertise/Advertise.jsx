@@ -2,13 +2,14 @@ import React, { useEffect, useState } from "react";
 import "./Advertise.css";
 import Navbar from "../../Components/Navbar/Navbar";
 import Footer from "../../Components/Footer/Footer";
-import { auth, db, storage } from "../../firebase";
+import { auth, db } from "../../firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import { collection, query, where, orderBy, onSnapshot } from "firebase/firestore";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { toast } from "react-toastify";
 import { BANNER_PLACEMENTS } from "../../config/bannerPlacements";
 import { loadRazorpayScript } from "../../utils/loadRazorpayScript";
+
+const MAX_IMAGE_BYTES = 500 * 1024; // keeps the base64 doc comfortably under Firestore's 1MB/doc limit
 
 const callApi = async (path, body) => {
   const token = await auth.currentUser.getIdToken();
@@ -31,8 +32,7 @@ const Advertise = () => {
   const [description, setDescription] = useState("");
   const [clickUrl, setClickUrl] = useState("");
   const [placementId, setPlacementId] = useState("");
-  const [imageFile, setImageFile] = useState(null);
-  const [imagePreview, setImagePreview] = useState(null);
+  const [imageBase64, setImageBase64] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [requests, setRequests] = useState([]);
 
@@ -59,12 +59,13 @@ const Advertise = () => {
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error("Image too large! Max 5MB.");
+    if (file.size > MAX_IMAGE_BYTES) {
+      toast.error("Image too large! Max 500KB.");
       return;
     }
-    setImageFile(file);
-    setImagePreview(URL.createObjectURL(file));
+    const reader = new FileReader();
+    reader.onload = (ev) => setImageBase64(ev.target.result);
+    reader.readAsDataURL(file);
   };
 
   const resetForm = () => {
@@ -72,8 +73,7 @@ const Advertise = () => {
     setDescription("");
     setClickUrl("");
     setPlacementId("");
-    setImageFile(null);
-    setImagePreview(null);
+    setImageBase64(null);
   };
 
   const handleSubmitAndPay = async () => {
@@ -89,7 +89,7 @@ const Advertise = () => {
       toast.error("Please select a banner placement type.");
       return;
     }
-    if (!imageFile) {
+    if (!imageBase64) {
       toast.error("Please upload a banner image.");
       return;
     }
@@ -99,16 +99,11 @@ const Advertise = () => {
       const ready = await loadRazorpayScript();
       if (!ready) throw new Error("Could not load Razorpay checkout. Check your connection.");
 
-      // Image is uploaded up front so its URL can travel with the order —
-      // but note nothing is added to "Advertising Requests" (Firestore)
-      // yet. If payment is abandoned, no request ever appears in the list.
-      const imgRef = ref(storage, `banner-ads/${user.uid}/${Date.now()}_${imageFile.name}`);
-      await uploadBytes(imgRef, imageFile);
-      const imageUrl = await getDownloadURL(imgRef);
-
+      // Nothing is added to "Advertising Requests" (Firestore) yet — only
+      // a Razorpay order exists at this point.
       const { orderId, amount, currency, keyId, placementName } = await callApi(
         "/api/razorpay/create-ad-order",
-        { placementId, title, description, clickUrl, imageUrl },
+        { placementId },
       );
 
       const rzp = new window.Razorpay({
@@ -126,6 +121,10 @@ const Advertise = () => {
               razorpay_order_id: response.razorpay_order_id,
               razorpay_payment_id: response.razorpay_payment_id,
               razorpay_signature: response.razorpay_signature,
+              title,
+              description,
+              clickUrl,
+              imageBase64,
             });
             toast.success("Banner request submitted & approved! 🎉");
             resetForm();
@@ -217,10 +216,10 @@ const Advertise = () => {
           </div>
 
           <div className="form-group">
-            <label>Banner image *</label>
+            <label>Banner image * (max 500KB)</label>
             <label className="image-upload-box">
-              {imagePreview ? (
-                <img src={imagePreview} alt="banner preview" className="image-preview" />
+              {imageBase64 ? (
+                <img src={imageBase64} alt="banner preview" className="image-preview" />
               ) : (
                 <span>Click to upload banner image (PNG, JPG, WEBP)</span>
               )}

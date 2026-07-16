@@ -64,15 +64,15 @@ export default async function handler(req, res) {
           const notes = order.notes || {};
 
           if (notes.kind === "banner_ad" && notes.uid && notes.placementId) {
+            // Fallback path only (browser closed before verify-ad-payment
+            // could send title/description/image) — activateAdRequest
+            // merges, so if verify-ad-payment does still land afterwards
+            // it fills these fields in without creating a duplicate.
             await activateAdRequest({
               orderId: payment.order_id,
               paymentId: payment.id,
               uid: notes.uid,
               placementId: notes.placementId,
-              title: notes.title,
-              description: notes.description,
-              clickUrl: notes.clickUrl,
-              imageUrl: notes.imageUrl,
             });
           } else if (notes.uid && notes.planId) {
             await activateSubscription({

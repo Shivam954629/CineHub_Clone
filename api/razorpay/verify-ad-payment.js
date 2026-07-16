@@ -6,9 +6,9 @@ import { activateAdRequest } from "../_lib/adRequests.js";
 // Mirrors verify-payment.js for the banner ad flow. Never trusts the
 // client's word that payment succeeded — recomputes the signature with the
 // secret key and re-fetches the order from Razorpay to confirm status +
-// ownership + the actual ad details (title/description/etc came from the
-// order's notes, set server-side at create-ad-order time — not from this
-// request body).
+// ownership + placement (the only fields that affect the amount charged).
+// title/description/clickUrl/imageBase64 come from this request body since
+// they can't influence what was actually paid.
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
@@ -16,7 +16,15 @@ export default async function handler(req, res) {
 
   try {
     const uid = await requireUid(req);
-    const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body || {};
+    const {
+      razorpay_order_id,
+      razorpay_payment_id,
+      razorpay_signature,
+      title,
+      description,
+      clickUrl,
+      imageBase64,
+    } = req.body || {};
 
     if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
       return res.status(400).json({ error: "Missing payment verification fields" });
@@ -43,7 +51,7 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "Order not marked as paid by Razorpay" });
     }
 
-    const { uid: orderUid, placementId, title, description, clickUrl, imageUrl } = order.notes || {};
+    const { uid: orderUid, placementId } = order.notes || {};
     if (!orderUid || orderUid !== uid) {
       return res.status(403).json({ error: "Order does not belong to this user" });
     }
@@ -56,7 +64,7 @@ export default async function handler(req, res) {
       title,
       description,
       clickUrl,
-      imageUrl,
+      imageUrl: imageBase64,
     });
 
     return res.status(200).json({ success: true });
