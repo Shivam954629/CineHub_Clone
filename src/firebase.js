@@ -2,12 +2,10 @@ import { initializeApp } from "firebase/app";
 import {
   createUserWithEmailAndPassword,
   getAuth,
-
   signInWithEmailAndPassword,
   signOut,
   GoogleAuthProvider,
   signInWithPopup,
-  getRedirectResult,
   browserLocalPersistence,
   setPersistence,
 } from "firebase/auth";

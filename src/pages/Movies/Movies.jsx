@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import "./Movies.css";
 import Navbar from "../../Components/Navbar/Navbar";
 import Footer from "../../Components/Footer/Footer";
@@ -26,13 +26,16 @@ const Movies = () => {
   const [loadingMore, setLoadingMore] = useState(false);
   const navigate = useNavigate();
 
-  const options = {
-    method: "GET",
-    headers: {
-      accept: "application/json",
-      Authorization: `Bearer ${import.meta.env.VITE_TMDB_TOKEN}`,
-    },
-  };
+  const options = useMemo(
+    () => ({
+      method: "GET",
+      headers: {
+        accept: "application/json",
+        Authorization: `Bearer ${import.meta.env.VITE_TMDB_TOKEN}`,
+      },
+    }),
+    [],
+  );
 
   useEffect(() => {
     setLoading(true);
@@ -51,7 +54,7 @@ const Movies = () => {
         setLoading(false);
       })
       .catch(() => setLoading(false));
-  }, [activeGenre, sortBy, bollywood]);
+  }, [activeGenre, sortBy, bollywood, options]);
 
   const loadMore = () => {
     const nextPage = page + 1;

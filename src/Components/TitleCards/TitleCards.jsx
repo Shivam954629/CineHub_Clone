@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import "./TitleCards.css";
 import { Link } from "react-router-dom";
 
@@ -7,13 +7,16 @@ const TitleCards = ({ title, category }) => {
   const [loading, setLoading] = useState(true);
   const cardsRef = useRef();
 
-  const options = {
-    method: "GET",
-    headers: {
-      accept: "application/json",
-      Authorization: `Bearer ${import.meta.env.VITE_TMDB_TOKEN}`,
-    },
-  };
+  const options = useMemo(
+    () => ({
+      method: "GET",
+      headers: {
+        accept: "application/json",
+        Authorization: `Bearer ${import.meta.env.VITE_TMDB_TOKEN}`,
+      },
+    }),
+    [],
+  );
 
   const handleWheel = (event) => {
     event.preventDefault();
@@ -45,7 +48,7 @@ const TitleCards = ({ title, category }) => {
     return () => {
       cardElement.removeEventListener("wheel", handleWheel);
     };
-  }, [category]);
+  }, [category, options]);
 
   return (
     <div className="title-cards">

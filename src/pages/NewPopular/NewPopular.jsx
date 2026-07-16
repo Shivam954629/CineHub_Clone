@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import "./NewPopular.css";
 import Navbar from "../../Components/Navbar/Navbar";
 import Footer from "../../Components/Footer/Footer";
@@ -13,13 +13,16 @@ const NewPopular = () => {
   const [loadingMore, setLoadingMore] = useState(false);
   const navigate = useNavigate();
 
-  const options = {
-    method: "GET",
-    headers: {
-      accept: "application/json",
-      Authorization: `Bearer ${import.meta.env.VITE_TMDB_TOKEN}`,
-    },
-  };
+  const options = useMemo(
+    () => ({
+      method: "GET",
+      headers: {
+        accept: "application/json",
+        Authorization: `Bearer ${import.meta.env.VITE_TMDB_TOKEN}`,
+      },
+    }),
+    [],
+  );
 
   useEffect(() => {
     setLoading(true);
@@ -37,7 +40,7 @@ const NewPopular = () => {
         setLoading(false);
       })
       .catch(() => setLoading(false));
-  }, [tab]);
+  }, [tab, options]);
 
   const loadMore = () => {
     const nextPage = page + 1;

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import "./MovieDetail.css";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import back_arrow_icon from "../../assets/back_arrow_icon.png";
@@ -32,13 +32,16 @@ const MovieDetail = () => {
   const [showTrailerModal, setShowTrailerModal] = useState(false);
   const [similarMovies, setSimilarMovies] = useState([]);
 
-  const options = {
-    method: "GET",
-    headers: {
-      accept: "application/json",
-      Authorization: `Bearer ${import.meta.env.VITE_TMDB_TOKEN}`,
-    },
-  };
+  const options = useMemo(
+    () => ({
+      method: "GET",
+      headers: {
+        accept: "application/json",
+        Authorization: `Bearer ${import.meta.env.VITE_TMDB_TOKEN}`,
+      },
+    }),
+    [],
+  );
 
   useEffect(() => {
     const fetchData = async () => {
@@ -104,7 +107,7 @@ const MovieDetail = () => {
     };
 
     fetchData();
-  }, [id, mediaType]);
+  }, [id, mediaType, options]);
 
   const toggleWatchlist = async () => {
     const user = auth.currentUser;
