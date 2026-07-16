@@ -1,5 +1,9 @@
 import { db } from "./firebaseAdmin.js";
-import { getPlacementById } from "../../src/config/bannerPlacements.js";
+import {
+  getPlacementById,
+  getDurationById,
+  calculateBannerAmount,
+} from "../../src/config/bannerPlacements.js";
 
 // Mirrors activateSubscription() in subscriptions.js, but for banner ad
 // requests. Called only after a verified Razorpay payment — by either the
@@ -19,28 +23,43 @@ export async function activateAdRequest({
   paymentId,
   uid,
   placementId,
+  durationId,
   title,
   description,
   clickUrl,
   imageUrl,
 }) {
   const placement = getPlacementById(placementId);
+  const duration = getDurationById(durationId);
   if (!placement) throw new Error(`Unknown placementId on order ${orderId}: ${placementId}`);
+  if (!duration) throw new Error(`Unknown durationId on order ${orderId}: ${durationId}`);
 
   const adRef = db.collection("adRequests").doc(orderId);
   const existing = await adRef.get();
+
+  // Amount + expiry are derived server-side from placementId/durationId only
+  // (the same two fields that were locked into the Razorpay order's notes at
+  // creation time) — never trusted from the client.
+  const now = new Date();
+  const expiresAt = existing.exists && existing.data().expiresAt
+    ? existing.data().expiresAt
+    : new Date(now.getTime() + duration.minutes * 60 * 1000);
 
   const data = {
     uid,
     placementId: placement.id,
     placementName: placement.name,
-    amount: placement.priceInPaise,
+    durationId: duration.id,
+    durationLabel: duration.label,
+    durationMinutes: duration.minutes,
+    amount: calculateBannerAmount(placementId, durationId),
     orderId,
     paymentId,
     status: "approved",
     paymentStatus: "paid",
+    expiresAt,
   };
-  if (!existing.exists) data.createdAt = new Date();
+  if (!existing.exists) data.createdAt = now;
   if (title !== undefined) data.title = title || "";
   if (description !== undefined) data.description = description || "";
   if (clickUrl !== undefined) data.clickUrl = clickUrl || "";

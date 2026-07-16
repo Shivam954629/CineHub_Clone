@@ -6,7 +6,11 @@ import { auth, db } from "../../firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import { collection, query, where, orderBy, onSnapshot } from "firebase/firestore";
 import { toast } from "react-toastify";
-import { BANNER_PLACEMENTS } from "../../config/bannerPlacements";
+import {
+  BANNER_PLACEMENTS,
+  BANNER_DURATIONS,
+  calculateBannerAmount,
+} from "../../config/bannerPlacements";
 import { loadRazorpayScript } from "../../utils/loadRazorpayScript";
 
 const MAX_IMAGE_BYTES = 700 * 1024; // keeps the base64 doc comfortably under Firestore's 1MB/doc limit
@@ -32,13 +36,22 @@ const Advertise = () => {
   const [description, setDescription] = useState("");
   const [clickUrl, setClickUrl] = useState("");
   const [placementId, setPlacementId] = useState("");
+  const [durationId, setDurationId] = useState("");
   const [imageBase64, setImageBase64] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [requests, setRequests] = useState([]);
+  const [now, setNow] = useState(Date.now());
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (u) => setUser(u));
     return () => unsub();
+  }, []);
+
+  // Ticks once a second so "Approved" flips to "Expired" in the list below
+  // the instant a banner's duration runs out — no backend polling needed.
+  useEffect(() => {
+    const timer = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(timer);
   }, []);
 
   // Real-time list — updates the moment the backend (verify call OR
@@ -73,6 +86,7 @@ const Advertise = () => {
     setDescription("");
     setClickUrl("");
     setPlacementId("");
+    setDurationId("");
     setImageBase64(null);
   };
 
@@ -89,6 +103,10 @@ const Advertise = () => {
       toast.error("Please select a banner placement type.");
       return;
     }
+    if (!durationId) {
+      toast.error("Please select how long the banner should run.");
+      return;
+    }
     if (!imageBase64) {
       toast.error("Please upload a banner image.");
       return;
@@ -101,9 +119,9 @@ const Advertise = () => {
 
       // Nothing is added to "Advertising Requests" (Firestore) yet — only
       // a Razorpay order exists at this point.
-      const { orderId, amount, currency, keyId, placementName } = await callApi(
+      const { orderId, amount, currency, keyId, placementName, durationLabel } = await callApi(
         "/api/razorpay/create-ad-order",
-        { placementId },
+        { placementId, durationId },
       );
 
       const rzp = new window.Razorpay({
@@ -112,7 +130,7 @@ const Advertise = () => {
         amount,
         currency,
         name: "CineHub Advertising",
-        description: `${placementName} — banner request`,
+        description: `${placementName} — ${durationLabel}`,
         theme: { color: "#e50914" },
         prefill: { email: user.email || "" },
         handler: async (response) => {
@@ -204,13 +222,33 @@ const Advertise = () => {
               <option value="">Select a placement type</option>
               {BANNER_PLACEMENTS.map((p) => (
                 <option key={p.id} value={p.id}>
-                  {p.name} — {p.priceLabel}
+                  {p.name} — {p.rateLabel}
                 </option>
               ))}
             </select>
             {placementId && (
               <p className="placement-hint">
                 {BANNER_PLACEMENTS.find((p) => p.id === placementId)?.description}
+              </p>
+            )}
+          </div>
+
+          <div className="form-group">
+            <label>How long should it run? *</label>
+            <select value={durationId} onChange={(e) => setDurationId(e.target.value)}>
+              <option value="">Select a duration</option>
+              {BANNER_DURATIONS.map((d) => (
+                <option key={d.id} value={d.id}>
+                  {d.label}
+                </option>
+              ))}
+            </select>
+            {placementId && durationId && (
+              <p className="placement-hint">
+                You'll be charged ₹
+                {(calculateBannerAmount(placementId, durationId) / 100).toFixed(0)} — banner goes
+                live the instant payment is confirmed, and comes down automatically when the
+                duration ends.
               </p>
             )}
           </div>
@@ -241,22 +279,32 @@ const Advertise = () => {
               <div className="requests-row requests-header">
                 <span>Banner</span>
                 <span>Placement</span>
+                <span>Duration</span>
                 <span>Amount</span>
                 <span>Status</span>
                 <span>Payment</span>
               </div>
-              {requests.map((r) => (
-                <div key={r.id} className="requests-row">
-                  <span className="req-banner">
-                    {r.imageUrl && <img src={r.imageUrl} alt={r.title} />}
-                    {r.title}
-                  </span>
-                  <span>{r.placementName}</span>
-                  <span>₹{(r.amount / 100).toFixed(0)}</span>
-                  <span className="badge badge-approved">{r.status}</span>
-                  <span className="badge badge-paid">{r.paymentStatus}</span>
-                </div>
-              ))}
+              {requests.map((r) => {
+                // expiresAt is a Firestore Timestamp on read — .toMillis()
+                // handles that; falls back gracefully if it's ever missing.
+                const expiresAtMs = r.expiresAt?.toMillis ? r.expiresAt.toMillis() : null;
+                const isExpired = expiresAtMs !== null && now >= expiresAtMs;
+                return (
+                  <div key={r.id} className="requests-row">
+                    <span className="req-banner">
+                      {r.imageUrl && <img src={r.imageUrl} alt={r.title} />}
+                      {r.title}
+                    </span>
+                    <span>{r.placementName}</span>
+                    <span>{r.durationLabel || "—"}</span>
+                    <span>₹{(r.amount / 100).toFixed(0)}</span>
+                    <span className={`badge ${isExpired ? "badge-expired" : "badge-approved"}`}>
+                      {isExpired ? "expired" : r.status}
+                    </span>
+                    <span className="badge badge-paid">{r.paymentStatus}</span>
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>

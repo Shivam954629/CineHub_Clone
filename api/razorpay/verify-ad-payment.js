@@ -51,7 +51,7 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "Order not marked as paid by Razorpay" });
     }
 
-    const { uid: orderUid, placementId } = order.notes || {};
+    const { uid: orderUid, placementId, durationId } = order.notes || {};
     if (!orderUid || orderUid !== uid) {
       return res.status(403).json({ error: "Order does not belong to this user" });
     }
@@ -61,6 +61,7 @@ export default async function handler(req, res) {
       paymentId: razorpay_payment_id,
       uid,
       placementId,
+      durationId,
       title,
       description,
       clickUrl,

@@ -73,6 +73,7 @@ export default async function handler(req, res) {
               paymentId: payment.id,
               uid: notes.uid,
               placementId: notes.placementId,
+              durationId: notes.durationId,
             });
           } else if (notes.uid && notes.planId) {
             await activateSubscription({

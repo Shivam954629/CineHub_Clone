@@ -144,7 +144,7 @@
 
 .requests-row {
   display: grid;
-  grid-template-columns: 2fr 1.5fr 1fr 1fr 1fr;
+  grid-template-columns: 2fr 1.5fr 1fr 1fr 1fr 1fr;
   align-items: center;
   gap: 12px;
   padding: 12px 10px;
@@ -188,6 +188,7 @@
 
 .badge-approved { background: #10241a; color: #7ee2ae; border: 1px solid #1f7a4d; }
 .badge-paid { background: #10241a; color: #7ee2ae; border: 1px solid #1f7a4d; }
+.badge-expired { background: #241010; color: #e28080; border: 1px solid #7a2f1f; }
 
 @media (max-width: 700px) {
   .requests-row {

@@ -1,6 +1,10 @@
 import { getRazorpayInstance } from "../_lib/razorpay.js";
 import { requireUid } from "../_lib/firebaseAdmin.js";
-import { getPlacementById } from "../../src/config/bannerPlacements.js";
+import {
+  getPlacementById,
+  getDurationById,
+  calculateBannerAmount,
+} from "../../src/config/bannerPlacements.js";
 
 // Step 1 of the banner ad flow: create a Razorpay Order only. Nothing is
 // written to Firestore here — the ad request record is only created once
@@ -19,22 +23,24 @@ export default async function handler(req, res) {
 
   try {
     const uid = await requireUid(req);
-    const { placementId } = req.body || {};
+    const { placementId, durationId } = req.body || {};
 
     // Price is looked up server-side — the client only picks *which*
-    // placement, never the amount.
+    // placement and *how long*, never the amount.
     const placement = getPlacementById(placementId);
-    if (!placement) {
-      return res.status(400).json({ error: "Invalid placement selected" });
+    const duration = getDurationById(durationId);
+    if (!placement || !duration) {
+      return res.status(400).json({ error: "Invalid placement or duration selected" });
     }
+    const amount = calculateBannerAmount(placementId, durationId);
 
     const razorpay = getRazorpayInstance();
     const order = await razorpay.orders.create({
-      amount: placement.priceInPaise,
+      amount,
       currency: "INR",
       // Razorpay caps receipt at 40 chars — Firebase uids alone are 28.
       receipt: `ad_${uid.slice(0, 12)}_${Date.now().toString(36)}`,
-      notes: { kind: "banner_ad", uid, placementId: placement.id },
+      notes: { kind: "banner_ad", uid, placementId: placement.id, durationId: duration.id },
     });
 
     return res.status(200).json({
@@ -43,6 +49,7 @@ export default async function handler(req, res) {
       currency: order.currency,
       keyId: process.env.RAZORPAY_KEY_ID,
       placementName: placement.name,
+      durationLabel: duration.label,
     });
   } catch (err) {
     const status = err.statusCode || 500;

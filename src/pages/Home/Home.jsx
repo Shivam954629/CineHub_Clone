@@ -3,6 +3,7 @@ import "./Home.css";
 import Navbar from "../../Components/Navbar/Navbar";
 import TitleCards from "../../Components/TitleCards/TitleCards";
 import Footer from "../../Components/Footer/Footer";
+import AdBanner from "../../Components/AdBanner/AdBanner";
 import { useNavigate } from "react-router-dom";
 
 const Home = () => {
@@ -143,6 +144,13 @@ const Home = () => {
           <div className={`hero-progress-bar ${fade ? "running" : ""}`} />
         </div>
       </div>
+
+      {/* ===== SPONSORED BANNER =====
+          Pulls whatever paid "homepage_hero" ad is currently live from
+          Firestore and renders it here. Nothing to configure — it just
+          appears when a seller's payment is confirmed and disappears on
+          its own once the paid duration expires. */}
+      <AdBanner placementId="homepage_hero" />
 
       {/* ===== MOVIE ROWS ===== */}
       <div className="more-cards">
