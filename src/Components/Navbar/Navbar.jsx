@@ -32,10 +32,12 @@ const Navbar = () => {
   const [navScrolled, setNavScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [showBell, setShowBell] = useState(false);
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [currentUser, setCurrentUser] = useState(null);
   const bellRef = useRef();
   const searchRef = useRef();
+  const profileRef = useRef();
   const prevWatchlistIds = useRef(null); // null = not loaded yet
 
   const getActiveNav = () => {
@@ -107,6 +109,17 @@ const Navbar = () => {
     const handleClickOutside = (e) => {
       if (bellRef.current && !bellRef.current.contains(e.target)) {
         setShowBell(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // Click outside profile dropdown
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (profileRef.current && !profileRef.current.contains(e.target)) {
+        setShowProfileMenu(false);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
@@ -385,48 +398,80 @@ const Navbar = () => {
         </div>
 
         {/* Profile */}
-        <div className="navbar-profile">
+        <div
+          className="navbar-profile"
+          ref={profileRef}
+          onClick={() => setShowProfileMenu((v) => !v)}
+        >
           <img
             src={localStorage.getItem("cinehub_avatar") || profile_img}
             alt="profile"
             className="profile-img"
           />
-          <img src={caret_icon} alt="caret" className="caret-icon" />
-          <div className="dropdown">
-            <div className="dropdown-header">
-              <img
-                src={localStorage.getItem("cinehub_avatar") || profile_img}
-                alt="profile"
-              />
-              <div>
-                <p className="dropdown-name">
-                  {localStorage.getItem("cinehub_display_name") ||
-                    auth.currentUser?.displayName ||
-                    "My Profile"}
-                </p>
-                <p className="dropdown-email">
-                  {auth.currentUser?.email || "CineHub User"}
-                </p>
+          <img
+            src={caret_icon}
+            alt="caret"
+            className={`caret-icon ${showProfileMenu ? "caret-open" : ""}`}
+          />
+          {showProfileMenu && (
+            <div className="dropdown">
+              <div className="dropdown-header">
+                <img
+                  src={localStorage.getItem("cinehub_avatar") || profile_img}
+                  alt="profile"
+                />
+                <div>
+                  <p className="dropdown-name">
+                    {localStorage.getItem("cinehub_display_name") ||
+                      auth.currentUser?.displayName ||
+                      "My Profile"}
+                  </p>
+                  <p className="dropdown-email">
+                    {auth.currentUser?.email || "CineHub User"}
+                  </p>
+                </div>
               </div>
+              <hr className="dropdown-divider" />
+              <p
+                className="dropdown-item"
+                onClick={() => {
+                  setShowProfileMenu(false);
+                  navigate("/watchlist");
+                }}
+              >
+                ❤️ My Watchlist
+              </p>
+              <p
+                className="dropdown-item"
+                onClick={() => {
+                  setShowProfileMenu(false);
+                  navigate("/settings");
+                }}
+              >
+                ⚙️ Settings
+              </p>
+              <p
+                className="dropdown-item"
+                onClick={() => {
+                  setShowProfileMenu(false);
+                  navigate("/plans");
+                }}
+              >
+                💳 Plans & Billing
+              </p>
+              <hr className="dropdown-divider" />
+              <p
+                className="dropdown-item signout"
+                onClick={() => {
+                  setShowProfileMenu(false);
+                  logout();
+                  navigate("/login");
+                }}
+              >
+                🚪 Sign Out
+              </p>
             </div>
-            <hr className="dropdown-divider" />
-            <p className="dropdown-item" onClick={() => navigate("/watchlist")}>
-              ❤️ My Watchlist
-            </p>
-            <p className="dropdown-item" onClick={() => navigate("/settings")}>
-              ⚙️ Settings
-            </p>
-            <hr className="dropdown-divider" />
-            <p
-              className="dropdown-item signout"
-              onClick={() => {
-                logout();
-                navigate("/login");
-              }}
-            >
-              🚪 Sign Out
-            </p>
-          </div>
+          )}
         </div>
       </div>
 
@@ -474,6 +519,14 @@ const Navbar = () => {
               }}
             >
               ❤️ My List
+            </li>
+            <li
+              onClick={() => {
+                navigate("/plans");
+                setMenuOpen(false);
+              }}
+            >
+              💳 Plans & Billing
             </li>
             <li
               onClick={() => {

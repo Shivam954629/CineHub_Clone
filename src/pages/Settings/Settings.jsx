@@ -105,7 +105,7 @@ const Settings = () => {
         <div className="settings-layout">
           {/* Sidebar */}
           <div className="settings-sidebar">
-            {["profile", "account", "notifications"].map((tab) => (
+            {["profile", "account", "billing", "notifications"].map((tab) => (
               <button
                 key={tab}
                 className={`settings-tab ${activeTab === tab ? "active" : ""}`}
@@ -113,6 +113,7 @@ const Settings = () => {
               >
                 {tab === "profile" && "👤 Profile"}
                 {tab === "account" && "🔒 Account"}
+                {tab === "billing" && "💳 Billing"}
                 {tab === "notifications" && "🔔 Notifications"}
               </button>
             ))}
@@ -216,6 +217,25 @@ const Settings = () => {
                     </button>
                   </div>
                 )}
+              </div>
+            )}
+
+            {/* Billing Tab */}
+            {activeTab === "billing" && (
+              <div className="settings-section">
+                <h2>Billing</h2>
+                <p style={{ color: "#aaa", fontSize: 14, lineHeight: 1.7 }}>
+                  Manage your subscription plan, switch between Auto-Pay and
+                  pay-once billing, or cancel future renewals from the Plans
+                  &amp; Billing page.
+                </p>
+                <button
+                  className="save-btn"
+                  style={{ marginTop: 12 }}
+                  onClick={() => navigate("/plans")}
+                >
+                  Go to Plans & Billing
+                </button>
               </div>
             )}
 
