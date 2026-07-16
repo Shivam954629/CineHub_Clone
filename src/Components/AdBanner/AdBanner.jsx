@@ -31,8 +31,11 @@ const AdBanner = ({ placementId }) => {
 
   const active = banners
     .filter((b) => {
+      // Records without expiresAt are either legacy (pre-duration-pricing)
+      // rows or malformed writes — treat them as expired rather than
+      // "never expires", so stale data can't get stuck showing forever.
       const expiresAtMs = b.expiresAt?.toMillis ? b.expiresAt.toMillis() : null;
-      return expiresAtMs === null || now < expiresAtMs;
+      return expiresAtMs !== null && now < expiresAtMs;
     })
     .sort((a, b) => (b.createdAt?.toMillis?.() || 0) - (a.createdAt?.toMillis?.() || 0))[0];
 

@@ -4,7 +4,7 @@ import Navbar from "../../Components/Navbar/Navbar";
 import Footer from "../../Components/Footer/Footer";
 import { auth, db } from "../../firebase";
 import { onAuthStateChanged } from "firebase/auth";
-import { collection, query, where, orderBy, onSnapshot } from "firebase/firestore";
+import { collection, query, where, orderBy, onSnapshot, deleteDoc, doc } from "firebase/firestore";
 import { toast } from "react-toastify";
 import {
   BANNER_PLACEMENTS,
@@ -68,6 +68,16 @@ const Advertise = () => {
     });
     return () => unsub();
   }, [user]);
+
+  const handleDeleteRequest = async (id) => {
+    if (!window.confirm("Remove this banner? This can't be undone.")) return;
+    try {
+      await deleteDoc(doc(db, "adRequests", id));
+      toast.success("Banner removed.");
+    } catch (err) {
+      toast.error(err.message || "Could not remove banner.");
+    }
+  };
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
@@ -283,6 +293,7 @@ const Advertise = () => {
                 <span>Amount</span>
                 <span>Status</span>
                 <span>Payment</span>
+                <span></span>
               </div>
               {requests.map((r) => {
                 // expiresAt is a Firestore Timestamp on read — .toMillis()
@@ -302,6 +313,9 @@ const Advertise = () => {
                       {isExpired ? "expired" : r.status}
                     </span>
                     <span className="badge badge-paid">{r.paymentStatus}</span>
+                    <button className="req-remove-btn" onClick={() => handleDeleteRequest(r.id)}>
+                      Remove
+                    </button>
                   </div>
                 );
               })}
